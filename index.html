@@ -2080,7 +2080,13 @@ function autoPause() {
   clearInput();
   if (game && !game.ended && (!modal.open || ['hand', 'reward'].includes(activePanel())))pauseGame();
 }
-window.addEventListener('blur', autoPause);
+window.addEventListener('blur', () => {
+  if (navigator.maxTouchPoints > 0 && !document.hidden) {
+    held.clear();
+    return;
+  }
+  autoPause();
+});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden)autoPause();
 });
