@@ -493,6 +493,8 @@ function lizzy(g, u, command, probe = false) {
   effect(g, 'slash', u, g.facing, {range:radius, degrees});
   return true;
 }
+const ROOM_EXIT_TICKS = [25 * HZ, 60 * HZ, Infinity];
+const HAND_TICKS = [[10 * HZ], [12 * HZ, 30 * HZ, 48 * HZ]];
 function wavePlan(room) {
   const events = [];
   function band(start, end, interval, count, side) {
@@ -500,10 +502,10 @@ function wavePlan(room) {
     events.push({at:tick, kind:'chaser', side:side === 'alt'?(i % 2?'W':'E'):side, count});
   }
   if (room === 0) {
-    band(0, 20, 2, 1, 'W');
-    band(20, 45, 1.5, 1, 'alt');
-    band(45, 60, 1, 1, 'E');
-    events.push({at:1800, kind:'elite', side:'W', count:1});
+    band(0, 8, 2, 1, 'W');
+    band(8, 18, 1.5, 1, 'alt');
+    band(18, ROOM_EXIT_TICKS[0] / HZ, 1, 1, 'E');
+    events.push({at:14 * HZ, kind:'elite', side:'W', count:1});
   }
   if (room === 1) {
     band(0, 20, 1.5, 1, 'W');
@@ -570,7 +572,8 @@ class Game{
     this.candidates = [];
     this.waves = wavePlan(room);
     this.waveIndex = 0;
-    this.nextHand = 720;
+    this.exitTick = ROOM_EXIT_TICKS[room];
+    this.nextHand = room === 2 ? 12 * HZ : HAND_TICKS[room][0];
     this.stats = {room, hits:0, elapsed:0};
     this.log.rooms.push(this.stats);
     if (room === 2) {
@@ -724,11 +727,11 @@ class Game{
   advanceWaves() {
     if (this.room === 2) {
       if (this.tick % 480 === 0)this.schedule({kind:'chaser', side:(this.tick / 480) % 2?'E':'W', count:2});
-    }else if (this.tick < 3600) {
+    }else if (this.tick < this.exitTick) {
       while (this.waveIndex < this.waves.length && this.waves[this.waveIndex].at <= this.tick)this.schedule(this.waves[this.waveIndex++]);
     }
     this.warnings = this.warnings.filter(w => {
-      if (this.room !== 2 && this.tick >= 3600)return false;
+      if (this.room !== 2 && this.tick >= this.exitTick)return false;
       if (this.tick < w.end)return true;
       if (distance(this.player, w) >= 2) {
         this.enemy(w.kind, w.x, w.y);
@@ -889,7 +892,7 @@ class Game{
       effect(this, 'heal', p, p);
       return false;
     });
-    if (this.room !== 2 && this.tick >= 3600) {
+    if (this.room !== 2 && this.tick >= this.exitTick) {
       this.door = true;
       if (distance(this.player, point(19, 6)) <= .55) {
         this.reward();
@@ -897,7 +900,7 @@ class Game{
       }
     }
     if (this.commands && this.tick === this.nextHand) {
-      this.nextHand = this.room === 2?this.tick + 1500:this.tick === 720?1800:this.tick === 1800?2880:Infinity;
+      this.nextHand = this.room === 2 ? this.tick + 1500 : (HAND_TICKS[this.room].find(t => t > this.tick) ?? Infinity);
       this.deal();
     }
   }
@@ -959,7 +962,7 @@ function scatterSilver(g) {
   }
 }
 function collectSilver(g) {
-  if ((g.room===2 || g.tick<3600) && g.tick%420===240) scatterSilver(g);
+  if ((g.room===2 || g.tick<g.exitTick) && g.tick%420===240) scatterSilver(g);
   const supply=g.stance('supply');
   g.silverDrops=g.silverDrops.filter(drop=>{
     const dist=distance(drop,g.player);
@@ -1653,15 +1656,15 @@ function runRules(seed = '1889') {
     g.step();
     equal(g.hp, 5);
   });
-  test('59.9초 잠금 · 60초 문 통과 · 연타 1회', () => {
+  test('24.9초 잠금 · 25초 문 통과 · 연타 1회', () => {
     const g = fresh();
     quiet(g);
-    g.tick = 3593;
+    g.tick = 1493;
     g.player = point(19, 6);
     g.step();
-    equal([g.tick, g.door, g.phase], [3594, false, 'fight']);
+    equal([g.tick, g.door, g.phase], [1494, false, 'fight']);
     ticks(g, 6);
-    equal([g.tick, g.phase, g.choice], [3600, 'reward', 1]);
+    equal([g.tick, g.phase, g.choice], [1500, 'reward', 1]);
     equal([...g.candidates].sort(), ['bard', 'finny', 'meyrin']);
     g.hp = 3;
     const t = g.choice;
@@ -1672,7 +1675,7 @@ function runRules(seed = '1889') {
   test('개방 뒤 추가 스폰 종료 · 남아 있는 적은 계속 이동', () => {
     const g = fresh();
     quiet(g);
-    g.tick = 3599;
+    g.tick = 1499;
     const e = g.enemy('chaser', 3.5, 6), x = e.x;
     g.step();
     ticks(g, 15);
@@ -1800,7 +1803,7 @@ function runRules(seed = '1889') {
   });
   test('손패 10초 정지 · 드로 중 버린 더미만 섞기', () => {
     const g = new Game(seed);
-    g.tick = 719;
+    g.tick = g.nextHand - 1;
     g.shield = 750;
     g.immune = 760;
     g.enemy('chaser', 3, 6);
@@ -1887,7 +1890,7 @@ function runRules(seed = '1889') {
       g.hp = 6;
       const picks = [];
       for (let r = 0;r < 2;r++) {
-        for (let i = 0;i < 3600;i++) {
+        for (let i = 0;i < g.exitTick;i++) {
           g.immune = 999999;
           g.step();
           if (g.phase === 'hand')g.order(null);
@@ -1917,7 +1920,7 @@ function runRules(seed = '1889') {
     equal(a, b);
     equal(a.picks, off.picks);
     equal(a.spawns, off.spawns);
-    equal(a.hands.map(h => h.tick), [720, 1800, 2880, 720, 1800, 2880]);
+    equal(a.hands.map(h => h.tick), [600, 720, 1800, 2880]);
     equal(off.hands.length, 0);
   });
   test('확장 인물은 추첨에서 제외 · 표식 우선 · 소마와 아그니 추가 연타', () => {
@@ -2117,7 +2120,7 @@ function sync() {
     $('hearts').setAttribute('aria-label', '호위 ' + g.hp + '칸 / 6칸');
     $('clockName').textContent = g.room === 2?'보스 체력':'경과 시간';
     $('clock').textContent = time;
-    $('door').textContent = g.room === 2?'보스 격파':g.door?'동쪽 출구 개방':'출구 개방까지 ' + Math.ceil((3600 - g.tick) / 60) + '초';
+    $('door').textContent = g.room === 2?'보스 격파':g.door?'동쪽 출구 개방':'출구 개방까지 ' + Math.ceil((g.exitTick - g.tick) / 60) + '초';
     if ($('formation').dataset.order !== String(g.orderRank)) {
       $('formation').innerHTML = formation();
       $('formation').dataset.order = g.orderRank;
@@ -2214,7 +2217,7 @@ function pauseGame() {
   drawer('pause', header('INTERMISSION', '일시정지', '') + '<p class="intro">' + ROOMS[game.room].name + ' · ' + fmt(game.tick) + '</p><div class="dlgfoot"><button class="primary" data-action="close">계속하기</button><button class="minor" data-action="settings">설정</button><button class="minor" data-action="leave">타이틀로</button></div>', true);
 }
 function showHelp() {
-  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>각 방에서 60초를 버티면 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 일반 방의 12·30·48초에는 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
+  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>현관홀은 25초, 서재 회랑은 60초에 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 현관홀 10초와 서재 회랑 12·30·48초에 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
 }
 function settings() {
   const html = header('OPTIONS', '게임 설정') + '<label class="settings-line">대국 시드 <input id="seed" type="text" maxlength="70" placeholder="비우면 매 판 무작위" value="' + escapeText(options.seed) + '" autocomplete="off"></label><label class="settings-line">시엘의 명령 덱 <input id="useDeck" type="checkbox" ' + (options.commands?'checked':'') + '></label><p class="intro">시드와 명령 덱 설정은 다음 판부터 적용됩니다.</p><label class="settings-line">개발용 시점 비교 <select id="projection"><option value="top">탑뷰</option><option value="iso" ' + (options.iso?'selected':'') + '>아이소메트릭</option></select></label><div class="dlgfoot"><button class="minor" data-action="tests">규칙 테스트 실행</button><button class="primary" data-action="save">설정 적용</button></div>';
