@@ -194,11 +194,23 @@ guard:{name:'엄호해', effect:'2초 안에 접촉 한 번을 막습니다. 막
 open:{name:'길을 열어', effect:'전방 90도·2m 안의 적에게 피해 5를 주고 0.8m 밀칩니다.'}
 };
 const SCHOOLS = {
+  march:{name:'기동',cards:['stride','breakout']},
+  bastion:{name:'진지',cards:['hold','citadel']},
+  supply:{name:'보급',cards:['retrieve','reserve']},
+  echo:{name:'협공',cards:['relay','chorus']},
   hunt: {name:'사냥', cards:['snare','quarry']},
   siege: {name:'화공', cards:['fireline','furnace']},
   escort: {name:'호위', cards:['screen','rally']}
 };
 const TACTICS = {
+  stride:{name:'걸음을 늦추지 마',effect:'10초간 2m 이동할 때마다 원형 충격으로 주변 2m에 피해 9.'},
+  breakout:{name:'포위망을 뚫어',effect:'12초간 1m 이동마다 반경 3m에 피해 12와 밀치기. 멈추면 발동하지 않습니다.'},
+  hold:{name:'여기서 버텨',effect:'10초간 제자리에 1초 머물 때마다 7m 안의 가까운 적 둘에게 피해 12.'},
+  citadel:{name:'사선을 사수해',effect:'12초간 제자리에 0.75초 머물 때마다 8m 안의 적 넷에게 피해 16.'},
+  retrieve:{name:'물자를 회수해',effect:'8초간 4m 안의 파편과 오더를 끌어옵니다. 하나 주울 때마다 사용인들의 기본 공격을 준비합니다.'},
+  reserve:{name:'예비대를 투입해',effect:'10초간 6m 안의 파편과 오더를 끌어옵니다. 주우면 사용인 공격을 준비하고 물자 3개마다 호위 1칸을 회복합니다.'},
+  relay:{name:'공격을 이어받아',effect:'8초간 사용인이 기본 기술을 쓸 때마다 그 자리에서 가까운 적 하나에 지원 사격 피해 9.'},
+  chorus:{name:'일제히 사격해',effect:'12초간 사용인의 기본 기술마다 그 자리에서 가까운 적 셋에 각각 지원 사격 피해 12.'},
   snare:{name:'발을 묶어', effect:'6m 안의 적 넷을 5초간 45% 감속합니다. 메이린의 관통탄이 추가 피해를 줍니다.'},
   quarry:{name:'사냥감을 몰아', effect:'8m 안의 적을 6초간 감속하고 표식으로 받는 피해를 30% 높입니다.'},
   fireline:{name:'퇴로를 태워', effect:'최근 이동 경로 3m에 5초간 불길을 남깁니다. 피니안으로 적을 밀어 넣을 수 있습니다.'},
@@ -207,6 +219,16 @@ const TACTICS = {
   rally:{name:'반격을 개시해', effect:'5초간 접촉 한 번을 막고 모든 사용인에게 즉시 고유 명령을 내립니다. 1초 뒤 한 번 더 명령합니다.'}
 };
 function castTactic(g,key) {
+  const stance = {
+    stride:['march',600,1],breakout:['march',720,2],hold:['bastion',600,1],citadel:['bastion',720,2],
+    retrieve:['supply',480,1],reserve:['supply',600,2],relay:['echo',480,1],chorus:['echo',720,2]
+  }[key];
+  if (stance) {
+    const [type,duration,rank]=stance;
+    g.stances[type]={until:g.tick+duration,rank,progress:0};
+    g.lastSilverNotice={tick:g.tick,text:TACTICS[key].name+' · '+duration/60+'초'};
+    return;
+  }
   if (key === 'snare' || key === 'quarry') {
     const marked = key === 'quarry';
     for (const e of sortedTargets(g,g.player,marked?8:6).slice(0,marked?Infinity:4)) {
@@ -481,6 +503,7 @@ class Game{
     this.player = point(2, 6);
     this.facing = point(1, 0);
     this.walk = 0;
+    this.stances = {};
     this.cool = 0;
     this.immune = 0;
     this.shield = 0;
@@ -578,6 +601,10 @@ class Game{
   reward() {
     if (this.phase !== 'fight')return;
     const rng = this.rng.reward;
+    const previous = this.schoolPicks[0];
+    const pool = Object.keys(SCHOOLS).filter(k=>k!==previous);
+    const options = shuffle(pool,randomStream(this.seed,'school-'+this.room));
+    this.schoolOffers = previous?[previous,...options.slice(0,2)]:options.slice(0,3);
     if (this.room === 0)
     this.candidates = shuffle(['finny', 'meyrin', 'bard'], rng);
     else{
@@ -592,7 +619,7 @@ class Game{
   choose(key, token = this.choice, school = null) {
     if (this.phase !== 'reward' || token !== this.choice || !this.candidates.includes(key))return false;
     if (school !== null) {
-      if (!this.commands || !Object.hasOwn(SCHOOLS,school))return false;
+      if (!this.commands || !this.schoolOffers.includes(school))return false;
       const tier=this.schoolPicks.includes(school)?1:0;
       const slot=this.deck.find(c=>c.key===(this.schoolPicks.length?'open':'guard'));
       if (!slot)return false;
@@ -691,7 +718,18 @@ class Game{
     const dest = navigate(this.room, e, this.player, e.radius), dir = to(e, dest), d = Math.min(distance(e, dest), e.speed * (1 - slowAt(this, e)) * DT);
     travel(this.room, e, dir.x * d, dir.y * d, e.radius);
   }
+  stance(type) {
+    const state=this.stances[type];
+    return state && state.until>this.tick?state:null;
+  }
+  supportShot(origin,count,range,power) {
+    for(const e of sortedTargets(this,origin,range).slice(0,count)) {
+      damage(this,e,power);
+      effect(this,'silver',origin,e);
+    }
+  }
   moveParty(input) {
+    const before=this.walk;
     const n = Math.hypot(input.x, input.y), p = this.player;
     if (n > .001) {
       const prev = copyPoint(p), dir = unit(input.x, input.y);
@@ -701,6 +739,27 @@ class Game{
       if (distance(p, this.trail[this.trail.length - 1]) > .018) {
         this.trail.push(copyPoint(p));
         if (this.trail.length > 400)this.trail.shift();
+      }
+    }
+    const moved=this.walk-before, march=this.stance('march'), bastion=this.stance('bastion');
+    if(march) {
+      march.progress+=moved;
+      const interval=march.rank===2?1:2;
+      if(march.progress>=interval) {
+        march.progress-=interval;
+        const range=march.rank===2?3:2;
+        effect(this,'shock',p,p,{range});
+        for(const e of sortedTargets(this,p,range)) {
+          damage(this,e,march.rank===2?12:9);
+          if(march.rank===2)pushAway(this,e,p,.5);
+        }
+      }
+    }
+    if(bastion) {
+      bastion.progress=moved>.001?0:bastion.progress+1;
+      if(bastion.progress>=(bastion.rank===2?45:60)) {
+        bastion.progress=0;
+        this.supportShot(p,bastion.rank*2,6+bastion.rank,8+4*bastion.rank);
       }
     }
     for (const u of this.units) {
@@ -718,7 +777,11 @@ class Game{
         this.cool = this.tick + 48;
       }
     }
-    for (const u of this.units)if (this.tick >= u.ready && this.invoke(u.key, false))u.ready = this.tick + Math.round(PIECES[u.key].time/(1 + .15*this.orderRank));
+    for (const u of this.units)if (this.tick >= u.ready && this.invoke(u.key, false)){
+      const echo=this.stance('echo');
+      if(echo)this.supportShot(u,echo.rank===2?3:1,6,echo.rank===2?12:9);
+      u.ready = this.tick + Math.round(PIECES[u.key].time/(1 + .15*this.orderRank));
+    }
     const due = this.pending.filter(t => t.due <= this.tick);
     this.pending = this.pending.filter(t => t.due > this.tick);
     due.forEach(t => t.run());
@@ -833,13 +896,18 @@ function scatterSilver(g) {
 }
 function collectSilver(g) {
   if ((g.room===2 || g.tick<3600) && g.tick%420===240) scatterSilver(g);
+  const supply=g.stance('supply');
   g.silverDrops=g.silverDrops.filter(drop=>{
     const dist=distance(drop,g.player);
-    if(dist>(g.silver.count?1.42:.86) || !visible(g.room,drop,g.player,.12))return true;
-    const dir=to(drop,g.player), step=Math.min(dist,(3.4+(1.42-dist)*4.8)*DT);
+    if(dist>(supply?2+2*supply.rank:(g.silver.count?1.42:.86)) || !visible(g.room,drop,g.player,.12))return true;
+    const dir=to(drop,g.player), step=Math.min(dist,(supply?10:3.4+(1.42-dist)*4.8)*DT);
     drop.x+=dir.x*step;
     drop.y+=dir.y*step;
     if(distance(drop,g.player)>.35)return true;
+    if(supply){
+      for(const u of g.units)u.ready=g.tick;
+      if(++supply.progress%3===0 && supply.rank===2)g.hp=Math.min(6,g.hp+1);
+    }
     if (drop.order) {
       g.orderRank = Math.min(6,g.orderRank+1);
       for (const u of g.units) u.ready = g.tick;
@@ -1889,7 +1957,7 @@ function runRules(seed = '1889') {
 }
 </script><script>'use strict';
 const $ = id => document.getElementById(id), sheet = $('sheet'), modal = $('modal'), held = new Set();
-const options = {seed:'116', commands:true, iso:false};
+const options = {seed:'', commands:true, iso:false};
 let game = null, stick = null, panels = [], lastPhase = '', lastRoom = -1, hudStamp = '', accumulator = 0, previous = 0, turnShows = 0, lastArrival = 0;
 const escapeText = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[c]);
 const fmt = t => Math.floor(t / 3600).toString().padStart(2, '0') + ':' + Math.floor(t / 60 % 60).toString().padStart(2, '0');
@@ -1942,7 +2010,7 @@ function dismiss(all = false) {
 const header = (en, title, action = 'close') => '<div class="dialog-head"><div><small class="eyebrow">' + en + '</small><h2>' + title + '</h2></div>' + (action?'<button class="minor" data-action="' + action + '">' + (action === 'pause'?'일시정지':'닫기') + '</button>':'') + '</div>';
 function start() {
   dismiss(true);
-  game = new Game(options.seed, options.commands);
+  game = new Game(options.seed || String(crypto.getRandomValues(new Uint32Array(1))[0]), options.commands);
   view.iso = options.iso;
   document.body.classList.add('playing');
   $('cover').hidden = true;
@@ -1998,7 +2066,9 @@ function sync() {
     $('arrival').textContent = g.room === 0?'':g.room === 1?g.units[0] && PIECES[g.units[0].key].name + ' 합류 · 금빛 오더 카드를 주우세요':'연회장 진입 · 돌진 예고에 주의';
   }
   const notice=g.lastSilverNotice;
-  const growthText=notice && g.tick-notice.tick<105?notice.text:'';
+  const activeStances=Object.entries(g.stances).filter(([,state])=>state.until>g.tick)
+    .map(([type,state])=>SCHOOLS[type].name+' '+Math.ceil((state.until-g.tick)/60)+'초');
+  const growthText=notice && g.tick-notice.tick<105?notice.text:activeStances.join(' · ');
   if($('growth').textContent!==growthText)$('growth').textContent=growthText;
   if (g.tick >= lastArrival)$('arrival').textContent = '';
   if (g.phase !== lastPhase) {
@@ -2018,7 +2088,8 @@ function showTurn() {
   if (isReward) {
     if (g.commands) {
       body += '<label class="settings-line">덱 계통 <select id="schoolPick">';
-      for (const [key,school] of Object.entries(SCHOOLS)) {
+      for (const key of g.schoolOffers) {
+        const school=SCHOOLS[key];
         const advanced=g.schoolPicks.includes(key), card=TACTICS[school.cards[advanced?1:0]];
         body += '<option value="'+key+'">'+school.name+(advanced?' Ⅱ':' Ⅰ')+' · '+card.name+'</option>';
       }
@@ -2081,11 +2152,11 @@ function showHelp() {
   drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>각 방에서 60초를 버티면 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 일반 방의 12·30·48초에는 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
 }
 function settings() {
-  const html = header('OPTIONS', '게임 설정') + '<label class="settings-line">대국 시드 <input id="seed" type="text" maxlength="70" value="' + escapeText(options.seed) + '" autocomplete="off"></label><label class="settings-line">시엘의 명령 덱 <input id="useDeck" type="checkbox" ' + (options.commands?'checked':'') + '></label><p class="intro">시드와 명령 덱 설정은 다음 판부터 적용됩니다.</p><label class="settings-line">개발용 시점 비교 <select id="projection"><option value="top">탑뷰</option><option value="iso" ' + (options.iso?'selected':'') + '>아이소메트릭</option></select></label><div class="dlgfoot"><button class="minor" data-action="tests">규칙 테스트 실행</button><button class="primary" data-action="save">설정 적용</button></div>';
+  const html = header('OPTIONS', '게임 설정') + '<label class="settings-line">대국 시드 <input id="seed" type="text" maxlength="70" placeholder="비우면 매 판 무작위" value="' + escapeText(options.seed) + '" autocomplete="off"></label><label class="settings-line">시엘의 명령 덱 <input id="useDeck" type="checkbox" ' + (options.commands?'checked':'') + '></label><p class="intro">시드와 명령 덱 설정은 다음 판부터 적용됩니다.</p><label class="settings-line">개발용 시점 비교 <select id="projection"><option value="top">탑뷰</option><option value="iso" ' + (options.iso?'selected':'') + '>아이소메트릭</option></select></label><div class="dlgfoot"><button class="minor" data-action="tests">규칙 테스트 실행</button><button class="primary" data-action="save">설정 적용</button></div>';
   drawer('settings', html, true);
 }
 function saveSettings() {
-  options.seed = $('seed').value.trim() || '116';
+  options.seed = $('seed').value.trim();
   options.commands = $('useDeck').checked;
   view.iso = options.iso = $('projection').value === 'iso';
   dismiss();
@@ -2101,7 +2172,7 @@ function showCredits() {
 function showResult() {
   const g = game, won = g.phase === 'win';
   let html = header(won?'CHECKMATE':'GAME OVER', won?'체크메이트':'호위 실패', '') + '<p class="intro">' + (won?'연회장의 비자르 돌을 쓰러뜨렸습니다.':'비자르 돌이 호위를 뚫었습니다.') + '</p><div class="tally"><div><small>격파</small><strong>' + g.kills + '</strong></div><div><small>남은 호위</small><strong>' + g.hp + ' / 6</strong></div><div><small>명령 덱</small><strong>' + g.deck.length + '장</strong></div></div>';
-  html += '<p class="copy">세바스찬의 은식기　Lv.'+(g.silver.tier+1)+' · '+SILVER_TIERS[g.silver.tier].name+' · 파편 '+g.silver.count+'개</p>';
+  html += '<p class="copy">시드 '+escapeText(g.seed)+' · '+(g.schoolPicks.map(k=>SCHOOLS[k].name).join(' → ')||'계통 미선택')+'</p><p class="copy">세바스찬의 은식기　Lv.'+(g.silver.tier+1)+' · '+SILVER_TIERS[g.silver.tier].name+' · 파편 '+g.silver.count+'개</p>';
   html += '<p class="copy">둔 말　' + (g.log.picks.map(p => PIECES[p.key].name + (p.level === 2?' Ⅱ':'')).join(' → ') || '없음') + '<br>사용한 명령　' + (g.log.commands.map(c => cardName(c)).join(' · ') || '없음') + '</p>';
   html += g.log.rooms.map(s => '<div class="logline"><span>' + ROOMS[s.room].name + '</span><span>' + fmt(s.elapsed) + ' · 피격 ' + s.hits + '회</span></div>').join('');
   html += '<div class="dlgfoot"><button class="primary" data-action="retry">재도전</button><button class="minor" data-action="home">타이틀로</button></div>';
