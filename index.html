@@ -54,6 +54,17 @@ dialog{border-top:2px solid #e2efff}dialog::backdrop{background:#06142788}.intro
 #xpMeter{background:#31465e}#xpMeter::-webkit-progress-bar{background:#31465e}#xpMeter::-webkit-progress-value{background:linear-gradient(90deg,#729cc9,#e2efff)}#xpMeter::-moz-progress-bar{background:#b9d4ef}.xp-rail #train{color:#e5efff}
 #bellAction{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);min-height:44px;max-width:92%;width:max-content;z-index:2}
 @media(max-width:700px) and (orientation:portrait){.titlecopy{left:5%;right:5%;max-width:none;width:auto;bottom:5%;padding:20px 16px;background:linear-gradient(135deg,#233e5bde,#0e2038da)}.estate:after{background:linear-gradient(0deg,#102137 10%,#13283dcc 26%,transparent 65%)}.minor,.dlgfoot button{min-height:40px}}
+
+/* Pearl glass with ink-blue type. The estate remains visible through the glass. */
+:root{--ink:#142c4b;--muted:#435975;--line:#a9bbce;--gold:#294c71;--silver-edge:#ffffffcc;--glass:linear-gradient(132deg,#ffffffed,#e4edf5df 62%,#f7fbfff2);color-scheme:light}
+body{background:radial-gradient(ellipse at 24% 8%,#fff,#e4ebf2 48%,#b6c6d6);color:var(--ink)}
+.console{border-color:white;box-shadow:0 12px 44px #1b345334}.titlecopy{background:linear-gradient(130deg,#ffffffed,#e2edf3c9 75%,#f0f6fbbe);border:1px solid #fff;box-shadow:inset 0 0 0 4px #ffffff2e,0 10px 34px #102c4626}.titlecopy h1,.titlecopy h1 em,.titlecopy p{color:#102b4b;text-shadow:none}.titlecopy p:before,.door-status i{background:#32577b}
+.ledger-open{margin-top:9px}.primary,.xp-rail #train:enabled,#bellAction{background:linear-gradient(#294a69,#132d4b);color:white;border-color:#284661}.minor,.settings-line input[type=text],select{background:#f6f9fcdf;color:#17324e;border:1px solid #93a8ba}.minor:hover:not(:disabled),.system-rail button:hover{background:#d7e5ef}
+dialog,.combat-head,.combat-foot,.system-rail,.xp-rail,#growth,#arrival{background:var(--glass);color:var(--ink);border-color:var(--silver-edge);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.room-title h2,.armament strong,.time strong,.system-rail button,.crew,.turnline,.card strong,.dialog-head,.dialog-head h2,.settings-line,.tally,.logline,.scrolltext dt,.xp-rail #train{color:#193451}
+.intro,.copy,.scrolltext,.imprint,.readout small,.combat-foot small,.room-title small,.eyebrow,.piles,.card small,#silverProgress,.card .text{color:#354f68}.card,.perk-grid .card{background:linear-gradient(130deg,#fffffff0,#e6eff6bf);border-color:#9eafc0;color:#1a3552}.card:disabled{background:#d6dfe8;color:#58697c}.card .why{color:#853c3c}.perk-icon{color:#2d4c68;background:#ffffffc9}.pip.empty{background:#bac7d1}
+#radar{background:#152c45e8}.xp-rail #train:enabled{color:white}#xpMeter::-webkit-progress-bar{background:#bfceda}#xpMeter::-webkit-progress-value{background:linear-gradient(90deg,#789ab7,#284c70)}
+.recipes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(225px,100%),1fr));gap:9px}.recipe{display:flex;align-items:center;gap:10px;background:#ffffffbe;color:#193451;border:1px solid #a4b7c9;border-radius:6px;text-align:left;padding:8px}.recipe img{height:64px;width:48px;object-fit:cover;border-radius:3px}.recipe>span{display:grid;gap:4px}.recipe small{color:#405c75;font-size:11px}.recipe strong{font:700 18px var(--ko)}.recipe span span{font-size:12px;line-height:1.4}.formation-row{min-width:0}#formation{min-width:0}.combat-foot .crew{white-space:normal}
 </style></head><body>
 <svg aria-hidden="true" class="symbols"><defs>
 <symbol id="settings" viewBox="0 0 24 24"><path d="M3 7h5m4 0h9M3 17h11m4 0h3"/><circle cx="10" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></symbol>
@@ -64,7 +75,7 @@ dialog{border-top:2px solid #e2efff}dialog::backdrop{background:#06142788}.intro
 <div class="console"><div class="case">
 <main id="cover">
 <div class="estate" aria-hidden="true"></div>
-<div class="titlecopy"><h1>Black <span><em>to</em> Move</span></h1><p>팬텀하이브 저택</p><button class="primary embark" id="start" disabled>게임 시작 <svg><use href="#arrow"/></svg></button></div>
+<div class="titlecopy"><h1>Black <span><em>to</em> Move</span></h1><p>팬텀하이브 저택</p><button class="primary embark" id="start" disabled>게임 시작 <svg><use href="#arrow"/></svg></button><button class="minor ledger-open" id="ledger">전술 도감 · 출전 준비</button></div>
 </main><main id="game" hidden>
 <section class="combat-head"><div class="room-title"><small id="roomEn"></small><h2 id="roomName"></h2></div><div class="readout"><div class="armament"><small>은식기</small><strong id="silverLevel"></strong><span id="silverProgress"></span></div><div class="health"><small>호위</small><span id="hearts"></span></div><div class="time"><small id="clockName"></small><strong id="clock"></strong></div></div></section>
 <section class="field"><canvas id="arena" tabindex="0" aria-label="전투판. 방향키로 이동하거나 화면을 드래그하세요."></canvas><canvas id="radar" width="200" height="120" aria-label="저택 약도. 금색은 대열, 붉은색은 적, 초록색은 열린 출구"></canvas><button id="bellAction" class="minor" hidden>호출종 울리기 · 정예 처치 시 출구 개방</button><div id="stick" hidden><i></i></div><div id="growth" role="status"></div><div id="arrival" aria-live="polite"></div></section>
@@ -480,6 +491,10 @@ function meyrin(g, u, command, probe = false) {
     effect(g, 'beam', u, point(u.x + dir.x * 6, u.y + dir.y * 6), {width, hits, followUp});
   }
   shoot(direction);
+  if (!command && comboActive(g,'meyrin')) {
+    const angle = Math.atan2(direction.y,direction.x);
+    for (const offset of [-.24,.24])shoot(point(Math.cos(angle+offset),Math.sin(angle+offset)),true);
+  }
   if (command && u.level === 2)g.pending.push({due:g.tick + 15, run:() => shoot(direction, true)});
   return true;
 }
@@ -491,12 +506,13 @@ function finny(g, u, command, probe = false) {
     damage(g, e, 9 + 4*g.orderRank);
     pushAway(g, e, origin, command && u.level === 2?1.5:1);
   });
+  if (!command && comboActive(g,'finny'))g.shield = Math.max(g.shield,g.tick+90);
   effect(g, 'shock', origin, origin, {range});
   return true;
 }
 function bard(g, u, command, probe = false) {
   if (probe)return true;
-  for (const p of command?[trailAt(g, 0), trailAt(g, 1), trailAt(g, 2)]:[u]) {
+  for (const p of command?[trailAt(g, 0), trailAt(g, 1), trailAt(g, 2)]:comboActive(g,'bard')?[u,trailAt(g,1),trailAt(g,2)]:[u]) {
     g.fires.push({...copyPoint(p), born:g.tick, end:g.tick + (u.level === 2?180:120)});
   }
   return true;
@@ -507,6 +523,10 @@ function snake(g, u, command, probe = false) {
   if (probe)return true;
   for (const e of targets) {
     e.slows.push({rate:(command?.5:.4) + .04*g.orderRank, end:g.tick + (command && u.level === 2?180:120)});
+    if (!command && comboActive(g,'snake'))for (const other of sortedTargets(g,e,1.5,o=>o!==e)) {
+      other.slows.push({rate:.5,end:g.tick+120});
+      effect(g,'snake',e,other);
+    }
     effect(g, 'snake', u, e);
   }
   return true;
@@ -516,6 +536,11 @@ function lizzy(g, u, command, probe = false) {
   const targets = sector(g, u, radius, degrees);
   if (!targets.length)return false;
   if (probe)return true;
+  if(!command && comboActive(g,'lizzy')) {
+    const back = sortedTargets(g,u,2,e=>dot(to(u,e),g.facing)<0);
+    for(const e of back)damage(g,e,12);
+    effect(g,'slash',u,point(-g.facing.x,-g.facing.y),{range:2,degrees:180});
+  }
   targets.forEach(e => damage(g, e, (command?(u.level === 2?20:16):12) + 4*g.orderRank));
   effect(g, 'slash', u, g.facing, {range:radius, degrees});
   return true;
@@ -526,6 +551,16 @@ const TRAINING = {
   ward: {name:'교대 호위', text:['격파 6회마다 3초간 접촉 1회 방어.', '격파 4회마다 5초간 접촉 1회 방어.']},
   reach: {name:'보급 회수', text:['경험치 회수 반경 1.2m → 2.4m.', '회수 반경 3.6m. 경험치 결정 하나당 경험치 +1.']}
 };
+const COMBOS = {
+  meyrin:{perk:'volley',name:'교차 사격',effect:'기본 사격 뒤 좌우로 갈라지는 관통탄 두 발을 더 쏩니다.'},
+  finny:{perk:'ward',name:'철벽 호위',effect:'기본 밀치기에 성공하면 1.5초간 접촉을 한 번 막습니다.'},
+  bard:{perk:'stride',name:'화염 회랑',effect:'기본 공격 때 지나온 길 1m와 2m 지점에도 불길을 남깁니다.'},
+  snake:{perk:'reach',name:'독사 포위',effect:'감속을 건 적 주위 1.5m의 다른 적도 2초간 50% 느려집니다.'},
+  lizzy:{perk:'stride',name:'반전 검무',effect:'기본 전방 베기에 이어 후방 2m 안의 적도 피해 12로 벱니다.'}
+};
+function comboActive(g,key) {
+  return !!(g.roster[key] && g.training[COMBOS[key].perk]);
+}
 const ROOM_EXIT_TICKS = [25 * HZ, 60 * HZ, Infinity];
 const HAND_TICKS = [[10 * HZ], [12 * HZ, 30 * HZ, 48 * HZ]];
 function wavePlan(room) {
@@ -2231,9 +2266,25 @@ function dismiss(all = false) {
   previous = performance.now();
 }
 const header = (en, title, action = 'close') => '<div class="dialog-head"><div><small class="eyebrow">' + en + '</small><h2>' + title + '</h2></div>' + (action?'<button class="minor" data-action="' + action + '">' + (action === 'pause'?'일시정지':'닫기') + '</button>':'') + '</div>';
+const recordKey = 'black-to-move.combo-v1';
+let targetCombo = null, victories = {};
+try {
+  const saved = JSON.parse(localStorage.getItem(recordKey));
+  for (const key of Object.keys(COMBOS))if(saved?.[key] === true)victories[key] = true;
+} catch {}
+function comboBook() {
+  const rows = Object.entries(COMBOS).map(([key,c]) =>
+    '<button class="recipe" data-plan="'+key+'"><img src="'+MANOR.portraits[key]+'" alt=""><span><small>'+PIECES[key].name+' × '+TRAINING[c.perk].name+' · '+(victories[key]?'승리 기록':'미달성')+'</small><strong>'+c.name+'</strong><span>'+c.effect+'</span></span></button>').join('');
+  drawer('book',header('TACTICS','전술 도감')+'<p class="intro">조합을 고르면 해당 대열 강화 Ⅰ을 갖고 출발합니다. 사용인을 영입해 기술을 완성하고 보스를 격파하세요.</p><div class="recipes">'+rows+'</div>',true);
+}
+$('ledger').onclick = comboBook;
 function start() {
   dismiss(true);
   game = new Game(options.seed || String(crypto.getRandomValues(new Uint32Array(1))[0]), options.commands);
+  if(targetCombo) {
+    game.training[COMBOS[targetCombo].perk] = 1;
+    game.trainingLevel = 1;
+  }
   view.iso = options.iso;
   document.body.classList.add('playing');
   $('cover').hidden = true;
@@ -2258,7 +2309,7 @@ function home() {
 }
 function formation() {
   const lead = '<span class="crew"><img src="' + MANOR.figures.hero1 + '" alt="">시엘 · 세바스찬</span>';
-  return lead + game.units.map(u => '<span class="crew"><img alt="" src="' + MANOR.figures[u.key] + '">' + PIECES[u.key].name + (u.level === 2?' Ⅱ':'') + (game.orderRank?' +'+game.orderRank:'') + '</span>').join('');
+  return lead + game.units.map(u => '<span class="crew"><img alt="" src="' + MANOR.figures[u.key] + '">' + PIECES[u.key].name + (u.level === 2?' Ⅱ':'') + (game.orderRank?' +'+game.orderRank:'') + (comboActive(game,u.key)?' · '+COMBOS[u.key].name:'') + '</span>').join('');
 }
 function sync() {
   if (!game)return;
@@ -2286,9 +2337,9 @@ function sync() {
     $('clockName').textContent = g.room === 2?'보스 체력':'경과 시간';
     $('clock').textContent = time;
     $('door').textContent = g.room === 2?'보스 격파':g.door?'동쪽 출구 개방':'출구 개방까지 ' + Math.ceil((g.exitTick - g.tick) / 60) + '초';
-    if ($('formation').dataset.order !== String(g.orderRank)) {
+    if ($('formation').dataset.order !== [g.orderRank,g.trainingLevel,g.room].join('-')) {
       $('formation').innerHTML = formation();
-      $('formation').dataset.order = g.orderRank;
+      $('formation').dataset.order = [g.orderRank,g.trainingLevel,g.room].join('-');
     }
     hudStamp = stamp;
   }
@@ -2331,7 +2382,7 @@ function showTurn() {
     body += '<div class="choices recruit">';
     for (const [index, key] of g.candidates.entries()) {
       const p = PIECES[key], up = !!g.roster[key];
-      body += '<button class="card" data-pick="' + key + '" data-token="' + g.choice + '"><span class="portrait" style="--t:' + p.color + '"><img src="' + MANOR.portraits[key] + '" alt=""><span class="chess">' + p.piece + '</span></span><span class="cardcopy"><small>' + p.en + ' · ' + p.role + '</small><strong>' + p.name + '</strong><span class="text">' + (up?'Ⅱ 강화 · ' + p.upgrade:'영입 · ' + p.basic) + '</span></span><span class="key">' + (index + 1) + '</span></button>';
+      body += '<button class="card" data-pick="' + key + '" data-token="' + g.choice + '"><span class="portrait" style="--t:' + p.color + '"><img src="' + MANOR.portraits[key] + '" alt=""><span class="chess">' + p.piece + '</span></span><span class="cardcopy"><small>' + p.en + ' · ' + p.role + '</small><strong>' + p.name + '</strong><span class="text">' + (up?'Ⅱ 강화 · ' + p.upgrade:'영입 · ' + p.basic) + '</span><small>'+TRAINING[COMBOS[key].perk].name+' × '+p.name+' → '+COMBOS[key].name+'</small></span><span class="key">' + (index + 1) + '</span></button>';
     }
     body += '</div>';
   }else{
@@ -2380,7 +2431,11 @@ function showTraining() {
   drawer('training',header('FORMATION','대열 강화')+'<p class="intro">레벨 '+(game.trainingLevel+1)+' → '+(game.trainingLevel+2)+'</p><div class="choices perk-grid" style="--n:'+cards.length+'">'+cards.join('')+'</div><div class="dlgfoot"><button class="minor" data-redraw '+(canRedraw?'':'disabled')+'>후보 교체 · '+game.redraws+'회</button><button class="minor" data-action="close">나중에 선택</button></div>');
 }
 function selectChoice(b) {
-  if (!game || !b || b.disabled)return;
+  if (!b || b.disabled)return;
+  if (activePanel() === 'book' && Object.hasOwn(COMBOS,b.dataset.plan)) {
+    targetCombo = b.dataset.plan;
+    start();return;
+  }
   const k = activePanel(), token = Number(b.dataset.token);
   if (k === 'training') {
     if (b.hasAttribute('data-redraw') && game.redrawTraining()) { showTraining(); return; }
@@ -2426,18 +2481,25 @@ function showCredits() {
 }
 function showResult() {
   const g = game, won = g.phase === 'win';
+  const active = Object.keys(COMBOS).filter(k=>comboActive(g,k));
+  const first = won ? active.filter(k=>!victories[k]) : [];
+  if (first.length) {
+    first.forEach(k=>victories[k]=true);
+    try {localStorage.setItem(recordKey,JSON.stringify(victories));} catch {}
+  }
   let html = header(won?'CHECKMATE':'GAME OVER', won?'체크메이트':'호위 실패', '') + '<p class="intro">' + (won?'연회장의 비자르 돌을 쓰러뜨렸습니다.':'비자르 돌이 호위를 뚫었습니다.') + '</p><div class="tally"><div><small>격파</small><strong>' + g.kills + '</strong></div><div><small>남은 호위</small><strong>' + g.hp + ' / 6</strong></div><div><small>명령 덱</small><strong>' + g.deck.length + '장</strong></div></div>';
   html += '<p class="copy">시드 '+escapeText(g.seed)+' · '+(g.schoolPicks.map(k=>SCHOOLS[k].name).join(' → ')||'계통 미선택')+'</p><p class="copy">세바스찬의 은식기　Lv.'+(g.silver.tier+1)+' · '+SILVER_TIERS[g.silver.tier].name+' · 파편 '+g.silver.count+'개</p>';
   html += '<p class="copy">둔 말　' + (g.log.picks.map(p => PIECES[p.key].name + (p.level === 2?' Ⅱ':'')).join(' → ') || '없음') + '<br>사용한 명령　' + (g.log.commands.map(c => cardName(c)).join(' · ') || '없음') + '</p>';
   if(g.trainingLevel)html += '<p class="copy">대열 강화　'+Object.entries(g.training).map(([key,rank])=>TRAINING[key].name+' '+(rank===2?'Ⅱ':'Ⅰ')).join(' · ')+'</p>';
+  html += '<p class="copy">조합 '+(active.map(k=>COMBOS[k].name+(first.includes(k)?' · 첫 승리':'')).join(' / ') || '미완성')+'　|　도감 승리 '+Object.keys(victories).length+' / 5</p>';
   html += g.log.rooms.map(s => '<div class="logline"><span>' + ROOMS[s.room].name + '</span><span>' + fmt(s.elapsed) + ' · 피격 ' + s.hits + '회</span></div>').join('');
-  html += '<div class="dlgfoot"><button class="primary" data-action="retry">재도전</button><button class="minor" data-action="home">타이틀로</button></div>';
+  html += '<div class="dlgfoot"><button class="primary" data-action="retry">재도전</button><button class="minor" data-action="book">다른 조합 도전</button><button class="minor" data-action="home">타이틀로</button></div>';
   drawer('result', html);
 }
 function confirmLeave() {
   drawer('leave', header('RETURN TO TITLE', '타이틀로 돌아갈까요?', '') + '<p class="intro">이번 대열과 명령 덱은 게임을 끝내면 사라집니다.</p><div class="dlgfoot"><button class="minor" data-action="close">계속하기</button><button class="primary" data-action="home">타이틀로</button></div>', true);
 }
-const actions = {pause:pauseGame, close:() => dismiss(), retry:start, home, settings, save:saveSettings, tests:showTests, leave:confirmLeave};
+const actions = {book:comboBook,pause:pauseGame, close:() => dismiss(), retry:start, home, settings, save:saveSettings, tests:showTests, leave:confirmLeave};
 let pressed = null;
 sheet.addEventListener('pointerdown', e => {
   pressed = e.target.closest('button');
@@ -2457,7 +2519,7 @@ modal.addEventListener('cancel', e => {
   if (['reward', 'hand'].includes(activePanel()))
   pauseGame();else if (activePanel() !== 'result')dismiss();
 });
-$('start').onclick = start;
+$('start').onclick = () => {targetCombo=null;start();};
 Promise.all(assetsReady).then(() => {
   $('start').disabled = false;
 }).catch(() => {
