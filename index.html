@@ -335,7 +335,7 @@ function meyrin(g, u, command, probe = false) {
   const list = sortedTargets(g, u, 6), rear = list.find(e => dot(to(u, e), g.facing) < 0), target = rear || list[0];
   if (!target)return false;
   if (probe)return true;
-  const direction = distance(target, u) < 1e-8?g.facing:to(u, target), width = u.level === 2?.65:.4;
+  const direction = distance(target, u) < 1e-8?g.facing:to(u, target), width = (u.level === 2?.65:.4) + g.orderRank*.12;
   function shoot(dir, followUp = false) {
     u.bracedUntil = g.tick + 9;
     let hits = 0;
@@ -343,7 +343,7 @@ function meyrin(g, u, command, probe = false) {
       if (e.hp <= 0)continue;
       const dx = e.x - u.x, dy = e.y - u.y, along = dx * dir.x + dy * dir.y;
       if (along >= 0 && along <= 6 && Math.abs(dx * dir.y - dy * dir.x) <= width / 2 + 1e-8) {
-        damage(g, e, 14 + (slowAt(g, e) > 0?5:0));
+        damage(g, e, 14 + 4*g.orderRank + (slowAt(g, e) > 0?5:0));
         hits++;
       }
     }
@@ -355,11 +355,11 @@ function meyrin(g, u, command, probe = false) {
   return true;
 }
 function finny(g, u, command, probe = false) {
-  const origin = command?g.player:u, range = u.level === 2?1.7:1.3, targets = sortedTargets(g, origin, range);
+  const origin = command?g.player:u, range = (u.level === 2?1.7:1.3) + .17*g.orderRank, targets = sortedTargets(g, origin, range);
   if (!targets.length)return false;
   if (probe)return true;
   targets.forEach(e => {
-    damage(g, e, 9);
+    damage(g, e, 9 + 4*g.orderRank);
     pushAway(g, e, origin, command && u.level === 2?1.5:1);
   });
   effect(g, 'shock', origin, origin, {range});
@@ -373,21 +373,21 @@ function bard(g, u, command, probe = false) {
   return true;
 }
 function snake(g, u, command, probe = false) {
-  const targets = sortedTargets(g, u, command?4:3, e => command || dot(to(u, e), g.facing) <= 0).slice(0, command || u.level === 2?3:2);
+  const targets = sortedTargets(g, u, (command?4:3) + .25*g.orderRank, e => command || dot(to(u, e), g.facing) <= 0).slice(0, (command || u.level === 2?3:2) + Math.ceil(g.orderRank/2));
   if (!targets.length)return false;
   if (probe)return true;
   for (const e of targets) {
-    e.slows.push({rate:command?.5:.4, end:g.tick + (command && u.level === 2?180:120)});
+    e.slows.push({rate:(command?.5:.4) + .04*g.orderRank, end:g.tick + (command && u.level === 2?180:120)});
     effect(g, 'snake', u, e);
   }
   return true;
 }
 function lizzy(g, u, command, probe = false) {
-  const radius = command?(u.level === 2?2.3:2):1.3, degrees = command || u.level === 2?140:100;
+  const radius = (command?(u.level === 2?2.3:2):1.3) + .16*g.orderRank, degrees = command || u.level === 2?140:100;
   const targets = sector(g, u, radius, degrees);
   if (!targets.length)return false;
   if (probe)return true;
-  targets.forEach(e => damage(g, e, command?(u.level === 2?20:16):12));
+  targets.forEach(e => damage(g, e, (command?(u.level === 2?20:16):12) + 4*g.orderRank));
   effect(g, 'slash', u, g.facing, {range:radius, degrees});
   return true;
 }
@@ -658,14 +658,14 @@ class Game{
         this.cool = this.tick + 48;
       }
     }
-    for (const u of this.units)if (this.tick >= u.ready && this.invoke(u.key, false))u.ready = this.tick + PIECES[u.key].time;
+    for (const u of this.units)if (this.tick >= u.ready && this.invoke(u.key, false))u.ready = this.tick + Math.round(PIECES[u.key].time/(1 + .15*this.orderRank));
     const due = this.pending.filter(t => t.due <= this.tick);
     this.pending = this.pending.filter(t => t.due > this.tick);
     due.forEach(t => t.run());
     this.fires = this.fires.filter(f => f.end >= this.tick);
     for (const e of this.enemies) {
-      if (e.hp > 0 && this.tick >= e.fireReady && this.fires.some(f => this.tick > f.born && (this.tick - f.born) % 30 === 0 && distance(e, f) <= .8)) {
-        damage(this, e, 3);
+      if (e.hp > 0 && this.tick >= e.fireReady && this.fires.some(f => this.tick > f.born && (this.tick - f.born) % 30 === 0 && distance(e, f) <= .8 + .14*this.orderRank)) {
+        damage(this, e, 3 + this.orderRank);
         e.fireReady = this.tick + 30;
       }
     }
@@ -736,11 +736,13 @@ const SUPPLY_PATHS = [
   [[3.8,6],[4.9,3.3],[8.5,2.8],[13,3.2],[16.6,6.9],[11,9],[6,8.8],[10,6]]
 ];
 function initSilver(g) {
+  g.orderRank = 0;
   g.silver = {count:0, tier:0, fired:0, hits:0, peak:0, pickups:[], bursts:0};
   g.supplyRng = randomStream(g.seed, 'silver-supply');
 }
 function prepareSilverRoom(g) {
   g.silverDrops = [];
+  g.roomSupplyCount = 0;
   g.shots = [];
   g.silverTimers = {fork:1, ring:12, spiral:2, rain:20};
   g.silverPhase = 0;
@@ -751,7 +753,9 @@ function prepareSilverRoom(g) {
 }
 function placeSilver(g,p) {
   if (g.silverDrops.length < 44 && free(g.room,p,.16) && !g.silverDrops.some(d=>distance(d,p)<.35)) {
-    g.silverDrops.push({...copyPoint(p),born:g.tick});
+    const order = Object.keys(g.roster).length > 0 && g.orderRank < 6 && g.roomSupplyCount % 2 === 0;
+    g.roomSupplyCount++;
+    g.silverDrops.push({...copyPoint(p),born:g.tick,order});
     return true;
   }
   return false;
@@ -776,6 +780,14 @@ function collectSilver(g) {
     drop.x+=dir.x*step;
     drop.y+=dir.y*step;
     if(distance(drop,g.player)>.35)return true;
+    if (drop.order) {
+      g.orderRank = Math.min(6,g.orderRank+1);
+      for (const u of g.units) u.ready = g.tick;
+      const names = g.units.map(u => PIECES[u.key].name).join(' · ');
+      g.lastSilverNotice = {tick:g.tick,text:names+' 오더 +'+g.orderRank};
+      effect(g,'shock',g.player,g.player,{range:1});
+      return false;
+    }
     const s=g.silver;
     s.count++;
     const next=SILVER_TIERS[s.tier+1];
@@ -1115,7 +1127,7 @@ function paint(g) {
     ground(w, Math.max(.07, .45 * (w.end - g.tick) / 36), '#e88f7766', true);
   }
   for (const fire of g.fires) {
-    ground(fire, .8, '#b256336e', true);
+    ground(fire, .8 + .14*g.orderRank, '#b256336e', true);
     const p = project(fire);
     for (let i = 0;i < 7;i++) {
       const angle = i * 2.4, x = p.x + Math.cos(angle) * s * .55, y = p.y + Math.sin(angle) * s * .34;
@@ -1280,6 +1292,24 @@ function drawSilverDrops(g) {
     const y=p.y-radius*(1.02+.19*pulse);
     ellipse(p.x,p.y,radius*.82,radius*.26,'#112c37c9',true);
     ellipse(p.x,p.y,radius*(.82+.12*pulse),radius*.27,'#abfff2',false,1.4);
+    if (drop.order) {
+      ctx.save();
+      ctx.translate(p.x,y);
+      ctx.rotate(-.13);
+      ctx.fillStyle='#55263d';
+      ctx.strokeStyle='#ffdc87';
+      ctx.lineWidth=2;
+      ctx.fillRect(-radius*.74,-radius,radius*1.48,radius*2);
+      ctx.strokeRect(-radius*.74,-radius,radius*1.48,radius*2);
+      ctx.font='bold '+radius+'px serif';
+      ctx.textAlign='center';
+      ctx.fillStyle='#fff0c2';
+      ctx.fillText('♛',0,2);
+      ctx.font='bold 9px sans-serif';
+      ctx.fillText('오더',0,radius*.76);
+      ctx.restore();
+      continue;
+    }
     ctx.drawImage(icon,p.x-radius,y-radius,2*radius,2*radius);
     if(pulse>.35){
       const x=p.x+radius*.71,sy=y-radius*.68;
@@ -1877,13 +1907,13 @@ function home() {
 }
 function formation() {
   const lead = '<span class="crew"><img src="' + MANOR.figures.hero1 + '" alt="">시엘 · 세바스찬</span>';
-  return lead + game.units.map(u => '<span class="crew"><img alt="" src="' + MANOR.figures[u.key] + '">' + PIECES[u.key].name + (u.level === 2?' Ⅱ':'') + '</span>').join('');
+  return lead + game.units.map(u => '<span class="crew"><img alt="" src="' + MANOR.figures[u.key] + '">' + PIECES[u.key].name + (u.level === 2?' Ⅱ':'') + (game.orderRank?' +'+game.orderRank:'') + '</span>').join('');
 }
 function sync() {
   if (!game)return;
   const g = game, room = ROOMS[g.room], boss = g.enemies.find(e => e.kind === 'boss'), time = g.room === 2?Math.max(0, boss?.hp || 0) + ' / 160':fmt(g.tick);
   const s=g.silver, next=SILVER_TIERS[s.tier+1];
-  const stamp = [g.room, time, g.hp, g.door, s.count].join('|');
+  const stamp = [g.room, time, g.hp, g.door, s.count,g.orderRank].join('|');
   if (stamp !== hudStamp) {
     $('silverLevel').textContent = 'Lv.'+(s.tier+1);
     $('silverProgress').textContent = '파편 '+s.count+(next?'/'+next.need:' · MAX');
@@ -1895,13 +1925,17 @@ function sync() {
     $('clockName').textContent = g.room === 2?'보스 체력':'경과 시간';
     $('clock').textContent = time;
     $('door').textContent = g.room === 2?'보스 격파':g.door?'동쪽 출구 개방':'출구 개방까지 ' + Math.ceil((3600 - g.tick) / 60) + '초';
+    if ($('formation').dataset.order !== String(g.orderRank)) {
+      $('formation').innerHTML = formation();
+      $('formation').dataset.order = g.orderRank;
+    }
     hudStamp = stamp;
   }
   if (lastRoom !== g.room) {
     $('formation').innerHTML = formation();
     lastRoom = g.room;
     lastArrival = 120;
-    $('arrival').textContent = g.room === 0?'':g.room === 1?g.units[0] && PIECES[g.units[0].key].name + ' 합류 · 서재 회랑':'연회장 진입 · 돌진 예고에 주의';
+    $('arrival').textContent = g.room === 0?'':g.room === 1?g.units[0] && PIECES[g.units[0].key].name + ' 합류 · 금빛 오더 카드를 주우세요':'연회장 진입 · 돌진 예고에 주의';
   }
   const notice=g.lastSilverNotice;
   const growthText=notice && g.tick-notice.tick<105?notice.text:'';
@@ -1966,7 +2000,7 @@ function pauseGame() {
   drawer('pause', header('INTERMISSION', '일시정지', '') + '<p class="intro">' + ROOMS[game.room].name + ' · ' + fmt(game.tick) + '</p><div class="dlgfoot"><button class="primary" data-action="close">계속하기</button><button class="minor" data-action="settings">설정</button><button class="minor" data-action="leave">타이틀로</button></div>', true);
 }
 function showHelp() {
-  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>각 방에서 60초를 버티면 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 일반 방의 12·30·48초에는 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
+  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>각 방에서 60초를 버티면 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 일반 방의 12·30·48초에는 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
 }
 function settings() {
   const html = header('OPTIONS', '게임 설정') + '<label class="settings-line">대국 시드 <input id="seed" type="text" maxlength="70" value="' + escapeText(options.seed) + '" autocomplete="off"></label><label class="settings-line">시엘의 명령 덱 <input id="useDeck" type="checkbox" ' + (options.commands?'checked':'') + '></label><p class="intro">시드와 명령 덱 설정은 다음 판부터 적용됩니다.</p><label class="settings-line">개발용 시점 비교 <select id="projection"><option value="top">탑뷰</option><option value="iso" ' + (options.iso?'selected':'') + '>아이소메트릭</option></select></label><div class="dlgfoot"><button class="minor" data-action="tests">규칙 테스트 실행</button><button class="primary" data-action="save">설정 적용</button></div>';
