@@ -28,6 +28,17 @@ dialog{width:min(790px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin
 .console{margin:5px auto;width:calc(100% - 8px)}.case{aspect-ratio:auto;height:calc(100svh - 53px);max-height:970px}.surround{inset:6px}.estate{background-size:auto 88%;background-position:94% top;background-color:#1c111a}.estate:after{background:linear-gradient(0deg,#190f18 11%,#21101bf3 25%,#21101b80 43%,transparent 63%)}.titlecopy{left:8%;width:85%;top:auto;bottom:8%;transform:none}.titlecopy p{font-size:12px;margin:0 0 12px}h1{font-size:clamp(47px,13.5vw,82px);line-height:.96}h1 span{display:inline}.embark{margin-top:17px;min-height:39px;min-width:148px;font-size:14px}.system-rail{min-height:35px;padding:2px 6px}.system-rail nav{gap:0}.system-rail button{font-size:11px;padding:5px 6px}.system-rail svg{display:none}.imprint{font-size:9px}
 .combat-head{gap:5px;min-height:46px;padding:5px 6px}.room-title{flex-flow:column-reverse;align-items:flex-start;gap:2px}.room-title h2{font-size:16px}.room-title small{font-size:7px}.readout{gap:8px}.health,.time{flex-direction:column;align-items:flex-start;gap:2px}.armament{display:grid;grid-template-columns:auto auto;column-gap:4px;row-gap:0;padding-right:6px}.armament small{grid-column:1/-1}.armament strong,.time strong{font-size:14px}.readout small,#silverProgress{font-size:9px}.pip{width:7px;height:9px}.health #hearts{gap:1px}.combat-foot{gap:3px;padding:2px 5px;min-height:32px}.crew,.combat-foot small,.door-status{font-size:10px}.crew img{width:15px;height:21px}.crew,.formation-row,#formation{gap:3px}.door-status i{width:4px;height:4px}.choices{gap:6px}.choices.recruit{grid-template-columns:1fr}.recruit .card{display:grid;grid-template-columns:69px 1fr}.recruit .portrait{height:100%;min-height:66px;border:0;border-right:1px solid var(--line)}.recruit .key{display:none}.recruit .chess{font-size:17px;left:2px;bottom:2px}.cardcopy{gap:3px;padding:7px 8px}.card strong{font-size:17px}.card .text,.card .why{font-size:12px}.card small{font-size:9px}.intro{font-size:12px}.turnline{font-size:22px;margin:4px 0 8px}.dlgfoot{margin-top:8px}}
 @media(max-height:520px) and (orientation:landscape){.console{width:min(97vw,calc((100dvh - 34px)*1.78));margin:2px auto}.system-rail{min-height:25px}.system-rail button{min-height:23px;font-size:10px;padding:2px 8px}h1{font-size:clamp(43px,14vh,73px)}.titlecopy p{margin-bottom:9px}.embark{min-height:29px;margin-top:12px;padding:5px 13px;min-width:123px;font-size:13px}.combat-head,.combat-foot{min-height:25px;padding:2px 8px}.room-title h2{font-size:15px}.time strong,.armament strong{font-size:14px}.crew img{height:18px}.portrait{height:52px}.cardcopy{padding:5px}.turnline{font-size:18px;margin:2px 0}.dialog-head h2{font-size:21px}#sheet{padding:11px 16px}}
+
+#game{grid-template-rows:auto minmax(0,1fr) auto auto}
+#radar{position:absolute;right:9px;top:9px;width:clamp(75px,11vw,145px);height:auto;background:#231c2ae6;border:1px solid #ceac7e;box-shadow:0 2px 8px #17101fb5;border-radius:5px;pointer-events:none}
+.xp-rail{display:flex;align-items:center;gap:12px;padding:2px 12px;min-height:29px;background:#26212d;border-top:1px solid #705966}
+#xpMeter{appearance:none;border:0;flex:1;min-width:0;height:6px;border-radius:4px;overflow:hidden;background:#453849;color:#c295e8}
+#xpMeter::-webkit-progress-bar{background:#453849}#xpMeter::-webkit-progress-value{background:linear-gradient(90deg,#9763bb,#e5bcf7)}#xpMeter::-moz-progress-bar{background:#c295e8}
+.xp-rail #train{position:static;min-width:122px;min-height:24px;border-color:transparent;background:none;padding:2px 6px;text-align:right;font-variant-numeric:tabular-nums}.xp-rail #train:enabled{min-height:44px;text-align:center;border-color:#cda1ea;background:#493254}
+.perk-grid .card{border-top:3px solid var(--perk);background:linear-gradient(150deg,color-mix(in srgb,var(--perk) 15%,#27202b),#27202b)}
+.perk-grid [data-training=volley]{--perk:#ebb9ae}.perk-grid [data-training=stride]{--perk:#9cc8e7}.perk-grid [data-training=ward]{--perk:#dfc187}.perk-grid [data-training=reach]{--perk:#b1ce9a}
+.perk-icon{display:grid;place-items:center;width:46px;height:46px;margin:14px 12px 0;border:1px solid var(--perk);border-radius:50%;color:var(--perk);font:34px Georgia,serif}
+@media(max-width:700px) and (orientation:portrait){.perk-grid{grid-template-columns:1fr}.perk-grid .card{flex-direction:row;align-items:center}.perk-icon{flex:none;margin:8px 0 8px 9px;width:34px;height:34px;font-size:25px}.perk-grid .cardcopy{padding:8px 17px 8px 9px}.xp-rail{gap:7px;padding-inline:7px}.xp-rail #train{min-width:105px}.perk-grid .text{font-size:12px}}
 </style></head><body>
 <svg aria-hidden="true" class="symbols"><defs>
 <symbol id="settings" viewBox="0 0 24 24"><path d="M3 7h5m4 0h9M3 17h11m4 0h3"/><circle cx="10" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></symbol>
@@ -41,8 +52,8 @@ dialog{width:min(790px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin
 <div class="titlecopy"><h1>Black <span><em>to</em> Move</span></h1><p>팬텀하이브 저택</p><button class="primary embark" id="start" disabled>게임 시작 <svg><use href="#arrow"/></svg></button></div>
 </main><main id="game" hidden>
 <section class="combat-head"><div class="room-title"><small id="roomEn"></small><h2 id="roomName"></h2></div><div class="readout"><div class="armament"><small>은식기</small><strong id="silverLevel"></strong><span id="silverProgress"></span></div><div class="health"><small>호위</small><span id="hearts"></span></div><div class="time"><small id="clockName"></small><strong id="clock"></strong></div></div></section>
-<section class="field"><canvas id="arena" tabindex="0" aria-label="전투판. 방향키로 이동하거나 화면을 드래그하세요."></canvas><button id="train" type="button" disabled></button><div id="stick" hidden><i></i></div><div id="growth" role="status"></div><div id="arrival" aria-live="polite"></div></section>
-<section class="combat-foot"><div class="formation-row"><small>대열</small><div id="formation"></div></div><div class="door-status"><i></i><span id="door"></span></div></section>
+<section class="field"><canvas id="arena" tabindex="0" aria-label="전투판. 방향키로 이동하거나 화면을 드래그하세요."></canvas><canvas id="radar" width="200" height="120" aria-label="저택 약도. 금색은 대열, 붉은색은 적, 초록색은 열린 출구"></canvas><div id="stick" hidden><i></i></div><div id="growth" role="status"></div><div id="arrival" aria-live="polite"></div></section>
+<div class="xp-rail"><progress id="xpMeter" aria-label="대열 경험치" max="3" value="0"></progress><button id="train" type="button" disabled></button></div><section class="combat-foot"><div class="formation-row"><small>대열</small><div id="formation"></div></div><div class="door-status"><i></i><span id="door"></span></div></section>
 </main>
 <div class="surround" aria-hidden="true"><b></b><i></i></div></div>
 <footer class="system-rail"><span class="imprint">흑집사 비공식 팬게임</span><nav><button id="help"><svg><use href="#book"/></svg>조작 안내</button><button id="config"><svg><use href="#settings"/></svg>설정</button><button id="pause" hidden><svg><use href="#pauseIcon"/></svg>일시정지</button><button id="credits">제작 리소스</button></nav></footer></div>
@@ -530,6 +541,8 @@ class Game{
     this.schoolPicks = [];
     this.training = {};
     this.trainingLevel = 0;
+    this.redraws = 1;
+    this.redrawLevel = -1;
     this.xp = 0;
     this.wardKills = 0;
     this.strideDistance = 0;
@@ -703,7 +716,16 @@ class Game{
   get xpNeeded() { return 3 + this.trainingLevel * 3; }
   trainingOffers() {
     const keys = Object.keys(TRAINING).filter(k => (this.training[k] || 0) < 2);
-    return shuffle(keys, randomStream(this.seed, 'training-' + this.trainingLevel)).slice(0,3);
+    const pool = shuffle(keys, randomStream(this.seed, 'training-' + this.trainingLevel));
+    if (this.redrawLevel === this.trainingLevel)pool.unshift(pool.pop());
+    return pool.slice(0,3);
+  }
+  redrawTraining() {
+    if (this.phase !== 'fight' || this.xp < this.xpNeeded || !this.redraws)return false;
+    if (Object.keys(TRAINING).filter(k => (this.training[k] || 0) < 2).length <= 3)return false;
+    this.redrawLevel = this.trainingLevel;
+    this.redraws--;
+    return true;
   }
   train(key) {
     if (this.phase !== 'fight' || this.xp < this.xpNeeded || !this.trainingOffers().includes(key))return false;
@@ -1356,7 +1378,25 @@ function drawThreat(e) {
   lineWorld(e, end, '#fff0bf', 1.8);
   ctx.restore();
 }
+const mapCtx = document.getElementById('radar').getContext('2d');
+function drawRoomMap(g) {
+  const m = mapCtx;
+  m.clearRect(0,0,200,120);
+  m.fillStyle = '#71616a';
+  for (const [x,y,w,h] of ROOMS[g.room].blocks)m.fillRect(x*10,y*10,w*10,h*10);
+  function dotAt(p,size,color) {
+    m.beginPath();m.arc(p.x*10,p.y*10,size,0,Math.PI*2);m.fillStyle=color;m.fill();
+  }
+  if (g.room < 2) {
+    m.fillStyle = g.door ? '#93ffc4' : '#b2a19a';
+    m.fillRect(185,50,7,20);
+  }
+  for (const e of g.enemies)dotAt(e,e.kind==='boss'?6:3,e.kind==='boss'?'#ffb66b':'#ff8687');
+  for (const drop of g.items)dotAt(drop,4,'#adf8ba');
+  dotAt(g.player,6,'#201524');dotAt(g.player,4,'#ffe5a0');
+}
 function paint(g) {
+  drawRoomMap(g);
   setupCamera(g);
   const {a, b, c, d, e, f, W, H, dpr, scale:s} = camera;
   if (!W || !H)return;
@@ -1455,6 +1495,13 @@ function paint(g) {
   for (const fx of g.effects)drawMovingEffect(g, fx);
   for (const v of g.enemies)drawThreat(v);
   const foot = project(g.player);
+  const barWidth = clamp(s*.85,24,42);
+  ctx.fillStyle = '#211926';
+  ctx.fillRect(foot.x-barWidth/2-1,foot.y+7,barWidth+2,5);
+  for (let i=0;i<6;i++) {
+    ctx.fillStyle = i < g.hp ? '#9de2b0' : '#624851';
+    ctx.fillRect(foot.x-barWidth/2+i*barWidth/6,foot.y+8,barWidth/6-1,3);
+  }
   ground(g.player, .22, '#182541', false, 3.6);
   ground(g.player, .22, g.immune > g.tick?'#aee8ff':'#ffdf98', false, 1.5);
   const fx = project(point(g.player.x + g.facing.x * .37, g.player.y + g.facing.y * .37));
@@ -2176,7 +2223,11 @@ function sync() {
   const stamp = [g.room, time, g.hp, g.door, s.count,g.orderRank].join('|');
   const trainingButton = $('train');
   const canTrain = g.trainingLevel < 8 && g.xp >= g.xpNeeded;
-  const label = canTrain ? '✦ 대열 강화 선택' : g.trainingLevel === 8 ? '대열 강화 완료' : '◇ 경험치 '+g.xp+'/'+g.xpNeeded;
+  const label = canTrain ? '✦ 대열 강화 선택' : g.trainingLevel === 8 ? '대열 강화 완료' : '대열 Lv.'+(1+g.trainingLevel)+'　'+g.xp+' / '+g.xpNeeded;
+  const meter = $('xpMeter');
+  if (meter.max !== g.xpNeeded)meter.max = g.xpNeeded;
+  const filled = g.trainingLevel === 8 ? g.xpNeeded : Math.min(g.xp,g.xpNeeded);
+  if (meter.value !== filled)meter.value = filled;
   if (trainingButton.textContent !== label)trainingButton.textContent = label;
   trainingButton.disabled = !canTrain || g.phase !== 'fight';
   if (stamp !== hudStamp) {
@@ -2268,16 +2319,23 @@ function showTurn() {
 }
 $('train').onclick = () => {
   if (!game || game.phase !== 'fight' || modal.open || game.xp < game.xpNeeded)return;
+  showTraining();
+};
+function showTraining() {
+  const icons = {volley:'♗',stride:'♘',ward:'♜',reach:'♙'};
+  const roles = {volley:'지원 사격',stride:'이동 공격',ward:'방어',reach:'수집'};
   const cards = game.trainingOffers().map((key,i) => {
     const rank = game.training[key] || 0, item = TRAINING[key];
-    return '<button class="card" data-training="'+key+'"><span class="cardcopy"><small>대열 강화 '+(rank ? 'Ⅱ' : 'Ⅰ')+'</small><strong>'+item.name+'</strong><span class="text">'+item.text[rank]+'</span></span><span class="key">'+(i+1)+'</span></button>';
+    return '<button class="card" data-training="'+key+'"><span class="perk-icon" aria-hidden="true">'+icons[key]+'</span><span class="cardcopy"><small>'+roles[key]+' · '+(rank ? '강화 Ⅰ → Ⅱ' : '신규 Ⅰ')+'</small><strong>'+item.name+'</strong><span class="text">'+item.text[rank]+'</span></span><span class="key">'+(i+1)+'</span></button>';
   });
-  drawer('training',header('FORMATION','대열 강화')+'<p class="intro">이번 판의 대열에 적용됩니다. 닫으면 나중에 선택할 수 있습니다.</p><div class="choices short" style="--n:'+cards.length+'">'+cards.join('')+'</div>');
-};
+  const canRedraw = game.redraws > 0 && Object.keys(TRAINING).filter(k => (game.training[k] || 0) < 2).length > 3;
+  drawer('training',header('FORMATION','대열 강화')+'<p class="intro">레벨 '+(game.trainingLevel+1)+' → '+(game.trainingLevel+2)+'</p><div class="choices perk-grid" style="--n:'+cards.length+'">'+cards.join('')+'</div><div class="dlgfoot"><button class="minor" data-redraw '+(canRedraw?'':'disabled')+'>후보 교체 · '+game.redraws+'회</button><button class="minor" data-action="close">나중에 선택</button></div>');
+}
 function selectChoice(b) {
   if (!game || !b || b.disabled)return;
   const k = activePanel(), token = Number(b.dataset.token);
   if (k === 'training') {
+    if (b.hasAttribute('data-redraw') && game.redrawTraining()) { showTraining(); return; }
     if (game.train(b.dataset.training)) { dismiss(); sync(); }
     return;
   }
@@ -2298,7 +2356,7 @@ function pauseGame() {
   drawer('pause', header('INTERMISSION', '일시정지', '') + '<p class="intro">' + ROOMS[game.room].name + ' · ' + fmt(game.tick) + '</p><div class="dlgfoot"><button class="primary" data-action="close">계속하기</button><button class="minor" data-action="settings">설정</button><button class="minor" data-action="leave">타이틀로</button></div>', true);
 }
 function showHelp() {
-  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>대열 강화</dt><dd>쓰러진 적이 남긴 보라색 결정을 주우세요. 경험치가 차면 전투판 오른쪽 위의 대열 강화 선택을 눌러 이번 판에 쓸 능력을 고릅니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>현관홀은 25초, 서재 회랑은 60초에 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 현관홀 10초와 서재 회랑 12·30·48초에 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
+  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>대열 강화</dt><dd>쓰러진 적이 남긴 보라색 결정을 주우세요. 경험치가 차면 전투판 하단의 대열 강화 선택을 눌러 이번 판에 쓸 능력을 고릅니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>현관홀은 25초, 서재 회랑은 60초에 동쪽 문이 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 현관홀 10초와 서재 회랑 12·30·48초에 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
 }
 function settings() {
   const html = header('OPTIONS', '게임 설정') + '<label class="settings-line">대국 시드 <input id="seed" type="text" maxlength="70" placeholder="비우면 매 판 무작위" value="' + escapeText(options.seed) + '" autocomplete="off"></label><label class="settings-line">시엘의 명령 덱 <input id="useDeck" type="checkbox" ' + (options.commands?'checked':'') + '></label><p class="intro">시드와 명령 덱 설정은 다음 판부터 적용됩니다.</p><label class="settings-line">개발용 시점 비교 <select id="projection"><option value="top">탑뷰</option><option value="iso" ' + (options.iso?'selected':'') + '>아이소메트릭</option></select></label><div class="dlgfoot"><button class="minor" data-action="tests">규칙 테스트 실행</button><button class="primary" data-action="save">설정 적용</button></div>';
