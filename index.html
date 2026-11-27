@@ -194,6 +194,12 @@ guard:{name:'엄호해', effect:'2초 안에 접촉 한 번을 막습니다. 막
 open:{name:'길을 열어', effect:'전방 90도·2m 안의 적에게 피해 5를 주고 0.8m 밀칩니다.'}
 };
 const SCHOOLS = {
+  chain:{name:'연쇄',cards:['spark','cascade']},
+  ram:{name:'격돌',cards:['shove','crush']},
+  cull:{name:'추격',cards:['pursue','finishOff']},
+  bind:{name:'포박',cards:['net','tighten']},
+  lure:{name:'유인',cards:['bait','ambush']},
+  clock:{name:'시한',cards:['delay','salvo']},
   march:{name:'기동',cards:['stride','breakout']},
   bastion:{name:'진지',cards:['hold','citadel']},
   supply:{name:'보급',cards:['retrieve','reserve']},
@@ -203,6 +209,18 @@ const SCHOOLS = {
   escort: {name:'호위', cards:['screen','rally']}
 };
 const TACTICS = {
+  spark:{name:'도화선에 불을 붙여',effect:'8초간 적 처치 시 반경 2m에 피해 9. 폭발로 쓰러진 적도 폭발합니다.'},
+  cascade:{name:'끝까지 터뜨려',effect:'12초간 처치 폭발의 반경이 3m, 피해가 16이 됩니다.'},
+  shove:{name:'벽으로 몰아',effect:'8초간 2초마다 주변 적을 밀어냅니다. 밀려 벽이나 가구에 부딪히면 피해 12.'},
+  crush:{name:'빠져나갈 틈을 주지 마',effect:'12초간 1초마다 주변 적을 밀어내고 충돌 피해 20을 줍니다.'},
+  pursue:{name:'약한 놈부터',effect:'10초간 체력이 절반 이하인 적에게 모든 공격 피해가 50% 증가합니다.'},
+  finishOff:{name:'놓치지 마',effect:'12초간 체력이 절반 이하인 적에게 두 배 피해를 줍니다.'},
+  net:{name:'그 자리에 묶어',effect:'8초간 감속된 적이 맞으면 3초마다 한 번씩 추가 피해 8. 스네이크와 연계됩니다.'},
+  tighten:{name:'포위망을 조여',effect:'12초간 감속된 적이 맞으면 1초마다 한 번씩 추가 피해 12.'},
+  bait:{name:'미끼를 남겨',effect:'시엘이 서 있던 곳에 8초간 미끼를 놓습니다. 1초마다 주변 3m의 적을 중심으로 당깁니다.'},
+  ambush:{name:'한곳에 모아',effect:'미끼가 12초간 4m의 적을 당기며 매번 피해 5를 줍니다.'},
+  delay:{name:'셋을 세어',effect:'현재 위치에서 3초 뒤 반경 3m 폭발. 범위 안의 적 모두에게 피해 24.'},
+  salvo:{name:'뒤따르는 놈까지',effect:'현재 위치에서 2초·4초·6초 뒤 반경 3m 폭발. 매회 피해 20.'},
   stride:{name:'걸음을 늦추지 마',effect:'10초간 2m 이동할 때마다 원형 충격으로 주변 2m에 피해 9.'},
   breakout:{name:'포위망을 뚫어',effect:'12초간 1m 이동마다 반경 3m에 피해 12와 밀치기. 멈추면 발동하지 않습니다.'},
   hold:{name:'여기서 버텨',effect:'10초간 제자리에 1초 머물 때마다 7m 안의 가까운 적 둘에게 피해 12.'},
@@ -219,13 +237,27 @@ const TACTICS = {
   rally:{name:'반격을 개시해', effect:'5초간 접촉 한 번을 막고 모든 사용인에게 즉시 고유 명령을 내립니다. 1초 뒤 한 번 더 명령합니다.'}
 };
 function castTactic(g,key) {
+  if(key==='delay'||key==='salvo'){
+    const center=copyPoint(g.player);
+    for(const delay of key==='delay'?[180]:[120,240,360]){
+      effect(g,'fuse',center,center,{range:3,end:g.tick+delay});
+      g.pending.push({due:g.tick+delay,run:()=>{
+        effect(g,'shock',center,center,{range:3});
+        for(const e of sortedTargets(g,center,3))damage(g,e,key==='delay'?24:20);
+      }});
+    }
+    return;
+  }
   const stance = {
+    spark:['chain',480,1],cascade:['chain',720,2],shove:['ram',480,1],crush:['ram',720,2],
+    pursue:['cull',600,1],finishOff:['cull',720,2],net:['bind',480,1],tighten:['bind',720,2],
+    bait:['lure',480,1],ambush:['lure',720,2],
     stride:['march',600,1],breakout:['march',720,2],hold:['bastion',600,1],citadel:['bastion',720,2],
     retrieve:['supply',480,1],reserve:['supply',600,2],relay:['echo',480,1],chorus:['echo',720,2]
   }[key];
   if (stance) {
     const [type,duration,rank]=stance;
-    g.stances[type]={until:g.tick+duration,rank,progress:0};
+    g.stances[type]={until:g.tick+duration,rank,progress:0,origin:copyPoint(g.player)};
     g.lastSilverNotice={tick:g.tick,text:TACTICS[key].name+' · '+duration/60+'초'};
     return;
   }
@@ -384,6 +416,12 @@ function slowAt(g, e) {
 }
 function damage(g, e, amount, quiet = false) {
   if (e.hp <= 0)return;
+  const cull=g.stance('cull'), bind=g.stance('bind');
+  if(cull && e.hp<=e.max/2)amount*=1+.5*cull.rank;
+  if(bind && slowAt(g,e)>0 && !(e.bindReady>g.tick)){
+    amount+=bind.rank===2?12:8;
+    e.bindReady=g.tick+(bind.rank===2?60:180);
+  }
   const value = amount * (e.markUntil > g.tick?1.3:1) * (e.kind === 'boss' && e.mode === 'rest'?1.5:1);
   e.hp -= value;
   e.flash = g.tick + 6;
@@ -391,7 +429,9 @@ function damage(g, e, amount, quiet = false) {
 }
 function pushAway(g, e, p, amount) {
   const dir = distance(e, p) < .0001?g.facing:to(p, e);
-  travel(g.room, e, dir.x * amount, dir.y * amount, e.radius);
+  const hit=travel(g.room,e,dir.x*amount,dir.y*amount,e.radius);
+  const ram=g.stance('ram');
+  if(hit && ram)damage(g,e,ram.rank===2?20:12);
 }
 function meyrin(g, u, command, probe = false) {
   const list = sortedTargets(g, u, 6), rear = list.find(e => dot(to(u, e), g.facing) < 0), target = rear || list[0];
@@ -645,7 +685,17 @@ class Game{
     this.resultCount++;
   }
   resolveDeaths() {
-    for (const e of this.enemies.filter(e => e.hp <= 0)) {
+    const fallen=this.enemies.filter(e=>e.hp<=0);
+    const chain=this.stance('chain');
+    for(const e of fallen){
+      if(chain){
+        const range=chain.rank+1;
+        effect(this,'shock',e,e,{range});
+        for(const other of sortedTargets(this,e,range)){
+          damage(this,other,chain.rank===2?16:9);
+          if(other.hp<=0)fallen.push(other);
+        }
+      }
       this.kills++;
       effect(this, 'death', e, e);
       if (e.kind === 'elite')this.items.push(copyPoint(e));
@@ -769,6 +819,20 @@ class Game{
     }
   }
   allied() {
+    const ram=this.stance('ram'), lure=this.stance('lure');
+    if(ram && ram.progress++%(ram.rank===2?60:120)===0){
+      effect(this,'shock',this.player,this.player,{range:2.5});
+      for(const e of sortedTargets(this,this.player,2.5))pushAway(this,e,this.player,1.4);
+    }
+    if(lure && lure.progress++%60===0){
+      const range=2+lure.rank;
+      effect(this,'shock',lure.origin,lure.origin,{range});
+      for(const e of sortedTargets(this,lure.origin,range)){
+        const d=distance(e,lure.origin),dir=to(e,lure.origin),step=Math.min(d,1.2);
+        travel(this.room,e,dir.x*step,dir.y*step,e.radius);
+        if(lure.rank===2)damage(this,e,5);
+      }
+    }
     if (this.tick >= this.cool) {
       const target = sortedTargets(this, this.player, 5)[0];
       if (target) {
@@ -1177,6 +1241,7 @@ function drawMovingEffect(g, f) {
       ctx.fillText('관통 ×' + f.hits, p.x, p.y - s * 1.1);
     }
   }
+  if(f.type==='fuse'){ground(f.a,f.range,'#edc875',false,2);return;}
   if (f.type === 'silver') {
     const travel = Math.min(1, life * 2.8), x = p.x + (q.x - p.x) * travel, y = p.y + (q.y - p.y) * travel - s * (.97-.36*travel);
     const v = unit(q.x - p.x, q.y - p.y);
