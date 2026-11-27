@@ -193,6 +193,46 @@ const COMMON = {
 guard:{name:'엄호해', effect:'2초 안에 접촉 한 번을 막습니다. 막은 뒤 1.25초간 무적입니다.'},
 open:{name:'길을 열어', effect:'전방 90도·2m 안의 적에게 피해 5를 주고 0.8m 밀칩니다.'}
 };
+const SCHOOLS = {
+  hunt: {name:'사냥', cards:['snare','quarry']},
+  siege: {name:'화공', cards:['fireline','furnace']},
+  escort: {name:'호위', cards:['screen','rally']}
+};
+const TACTICS = {
+  snare:{name:'발을 묶어', effect:'6m 안의 적 넷을 5초간 45% 감속합니다. 메이린의 관통탄이 추가 피해를 줍니다.'},
+  quarry:{name:'사냥감을 몰아', effect:'8m 안의 적을 6초간 감속하고 표식으로 받는 피해를 30% 높입니다.'},
+  fireline:{name:'퇴로를 태워', effect:'최근 이동 경로 3m에 5초간 불길을 남깁니다. 피니안으로 적을 밀어 넣을 수 있습니다.'},
+  furnace:{name:'불길을 넓혀', effect:'현재 불길을 4초 연장하고 시엘 주위 네 방향에 6초간 불길을 놓습니다.'},
+  screen:{name:'대열을 지켜', effect:'5초간 접촉 한 번을 막고 모든 사용인의 기본 공격을 즉시 준비합니다.'},
+  rally:{name:'반격을 개시해', effect:'5초간 접촉 한 번을 막고 모든 사용인에게 즉시 고유 명령을 내립니다. 1초 뒤 한 번 더 명령합니다.'}
+};
+function castTactic(g,key) {
+  if (key === 'snare' || key === 'quarry') {
+    const marked = key === 'quarry';
+    for (const e of sortedTargets(g,g.player,marked?8:6).slice(0,marked?Infinity:4)) {
+      e.slows.push({rate:.45,end:g.tick+(marked?360:300)});
+      if (marked) e.markUntil = Math.max(e.markUntil||0,g.tick+360);
+      effect(g,'snake',g.player,e);
+    }
+  } else if (key === 'fireline' || key === 'furnace') {
+    const ring = key === 'furnace';
+    if (ring) for (const fire of g.fires) fire.end += 240;
+    for (let i=0;i<4;i++) {
+      const p = ring ? point(g.player.x+Math.cos(i*Math.PI/2),g.player.y+Math.sin(i*Math.PI/2)) : trailAt(g,i);
+      g.fires.push({...copyPoint(free(g.room,p,.1)?p:g.player),born:g.tick,end:g.tick+(ring?360:300)});
+    }
+  } else {
+    g.shield = g.tick+300;
+    effect(g,'guard',g.player,g.player,{range:1});
+    if (key === 'screen') for (const u of g.units) u.ready=g.tick;
+    else {
+      const volley = () => { for (const u of g.units) g.invoke(u.key,true); };
+      volley();
+      g.pending.push({due:g.tick+60,run:volley});
+    }
+  }
+}
+
 const ENEMY = {chaser:[18, 1.15, .22], elite:[36, .9, .29], charger:[25, 1.15, .24], boss:[160, 1.05, .38]};
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const point = (x, y) => ({x, y});
@@ -416,6 +456,7 @@ class Game{
     this.seed = String(seed);
     this.commands = commands;
     this.hp = 6;
+    this.schoolPicks = [];
     this.roster = {};
     this.deck = [];
     this.cardId = 0;
@@ -455,6 +496,12 @@ class Game{
     this.enemyId = 0;
     this.units = Object.entries(this.roster).map(([key, level]) => ({key, level, ...station(this, key), ready:0}));
     this.draw = shuffle(this.deck.map(c => ({...c})), this.rng.deck);
+    if (this.schoolPicks.length) {
+      const school=this.schoolPicks.at(-1);
+      const newest=SCHOOLS[school].cards[this.schoolPicks.filter(k=>k===school).length-1];
+      const index=this.draw.findIndex(c=>c.key===newest);
+      if(index>=0)this.draw.push(this.draw.splice(index,1)[0]);
+    }
     this.discard = [];
     this.hand = [];
     this.candidates = [];
@@ -494,6 +541,10 @@ class Game{
     return PIECES[key].skill(this, u, command, probe, triggerExtra);
   }
   can(card) {
+    if (TACTICS[card.key]) {
+      if (card.key === 'snare' || card.key === 'quarry')return sortedTargets(this,this.player,card.key==='snare'?6:8).length>0;
+      return true;
+    }
     if (card.key === 'guard')return true;
     if (card.key === 'open')return sector(this, this.player, 2, 90).length > 0;
     return this.invoke(card.key, true, true);
@@ -503,7 +554,8 @@ class Game{
     const card = this.hand.find(c => c.id === id);
     if (id !== null && (!card || !this.can(card)))return false;
     if (card) {
-      if (card.key === 'guard') {
+      if (TACTICS[card.key])castTactic(this,card.key);
+      else if (card.key === 'guard') {
         this.shield = this.tick + 120;
         effect(this, 'guard', this.player, this.player, {range:1});
       }
@@ -537,8 +589,16 @@ class Game{
     this.phase = 'reward';
     this.choice++;
   }
-  choose(key, token = this.choice) {
+  choose(key, token = this.choice, school = null) {
     if (this.phase !== 'reward' || token !== this.choice || !this.candidates.includes(key))return false;
+    if (school !== null) {
+      if (!this.commands || !Object.hasOwn(SCHOOLS,school))return false;
+      const tier=this.schoolPicks.includes(school)?1:0;
+      const slot=this.deck.find(c=>c.key===(this.schoolPicks.length?'open':'guard'));
+      if (!slot)return false;
+      slot.key=SCHOOLS[school].cards[tier];
+      this.schoolPicks.push(school);
+    }
     if (this.roster[key]) {
       this.roster[key] = 2;
       this.deck.find(c => c.key === key).level = 2;
@@ -1833,7 +1893,7 @@ const options = {seed:'116', commands:true, iso:false};
 let game = null, stick = null, panels = [], lastPhase = '', lastRoom = -1, hudStamp = '', accumulator = 0, previous = 0, turnShows = 0, lastArrival = 0;
 const escapeText = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[c]);
 const fmt = t => Math.floor(t / 3600).toString().padStart(2, '0') + ':' + Math.floor(t / 60 % 60).toString().padStart(2, '0');
-const cardName = c => COMMON[c.key]?.name || PIECES[c.key].command;
+const cardName = c => TACTICS[c.key]?.name || COMMON[c.key]?.name || PIECES[c.key].command;
 const activePanel = () => panels[panels.length - 1]?.kind;
 function clearInput() {
   held.clear();
@@ -1947,7 +2007,7 @@ function sync() {
     if (g.phase === 'win' || g.phase === 'loss')showResult();
   }
 }
-const reasons = {open:'정면 2m 안에 적이 없습니다.', meyrin:'6m 안에 조준할 적이 없습니다.', finny:'시엘 주위에 적이 없습니다.', snake:'스네이크 4m 안에 적이 없습니다.', lizzy:'전방 검격 범위에 적이 없습니다.'};
+const reasons = {snare:"6m 안에 적이 없습니다.",quarry:"8m 안에 적이 없습니다.",open:'정면 2m 안에 적이 없습니다.', meyrin:'6m 안에 조준할 적이 없습니다.', finny:'시엘 주위에 적이 없습니다.', snake:'스네이크 4m 안에 적이 없습니다.', lizzy:'전방 검격 범위에 적이 없습니다.'};
 function showTurn() {
   const g = game, isReward = g.phase === 'reward';
   turnShows++;
@@ -1956,6 +2016,14 @@ function showTurn() {
   body += isReward?'<p class="intro">다음 구역 · <b>' + next.name + '</b><br>' + next.note + '</p>':'<p class="intro">' + ROOMS[g.room].name + ' · ' + fmt(g.tick) + '　전투 정지 중</p>';
   body += '<p class="turnline new" lang="en">' + TURN_LINE + '</p>';
   if (isReward) {
+    if (g.commands) {
+      body += '<label class="settings-line">덱 계통 <select id="schoolPick">';
+      for (const [key,school] of Object.entries(SCHOOLS)) {
+        const advanced=g.schoolPicks.includes(key), card=TACTICS[school.cards[advanced?1:0]];
+        body += '<option value="'+key+'">'+school.name+(advanced?' Ⅱ':' Ⅰ')+' · '+card.name+'</option>';
+      }
+      body += '</select></label><p class="intro" id="schoolPreview"></p>';
+    }
     body += '<div class="choices recruit">';
     for (const [index, key] of g.candidates.entries()) {
       const p = PIECES[key], up = !!g.roster[key];
@@ -1973,19 +2041,29 @@ function showTurn() {
         snake:'4m 안의 적 셋을 3초간 50% 늦춥니다.',
         lizzy:'전방 140도·2.3m 안의 적에게 피해 20을 줍니다.'
       };
-      body += '<button class="card" data-card="' + c.id + '" data-token="' + g.choice + '" ' + (ok?'':'disabled') + '><span class="cardcopy"><small>' + (p?p.name + (c.level === 2?' · Ⅱ 강화':' · 고유 명령'):'시엘 · 기본 명령') + '</small><strong>' + cardName(c) + '</strong><span class="text">' + (COMMON[c.key]?.effect || (c.level === 2?enhanced[c.key]:p.effect)) + '</span>' + (!ok?'<span class="why">' + reasons[c.key] + '</span>':'') + '</span><span class="key">' + (i + 1) + '</span></button>';
+      body += '<button class="card" data-card="' + c.id + '" data-token="' + g.choice + '" ' + (ok?'':'disabled') + '><span class="cardcopy"><small>' + (p?p.name + (c.level === 2?' · Ⅱ 강화':' · 고유 명령'):TACTICS[c.key]?Object.values(SCHOOLS).find(s=>s.cards.includes(c.key)).name+' · 계통 명령':'시엘 · 기본 명령') + '</small><strong>' + cardName(c) + '</strong><span class="text">' + (TACTICS[c.key]?.effect || COMMON[c.key]?.effect || (c.level === 2?enhanced[c.key]:p.effect)) + '</span>' + (!ok?'<span class="why">' + reasons[c.key] + '</span>':'') + '</span><span class="key">' + (i + 1) + '</span></button>';
     }
     body += '</div>';
   }
-  body += '<div class="dlgfoot"><span class="piles">' + (isReward?'현재 명령 덱 ' + g.deck.length + '장':'뽑을 더미 ' + g.draw.length + ' · 손패 ' + g.hand.length + ' · 버린 더미 ' + g.discard.length) + '</span>' + (isReward?'':'<button class="minor" data-skip data-token="' + g.choice + '">지금은 됐다</button>') + '</div>';
+  body += '<div class="dlgfoot"><span class="piles">' + (isReward?'현재 명령 덱 ' + g.deck.length + '장':(g.schoolPicks.length?g.schoolPicks.map(k=>SCHOOLS[k].name).join(' → ')+' · ':'')+'뽑을 더미 ' + g.draw.length + ' · 손패 ' + g.hand.length + ' · 버린 더미 ' + g.discard.length) + '</span>' + (isReward?'':'<button class="minor" data-skip data-token="' + g.choice + '">지금은 됐다</button>') + '</div>';
   drawer(g.phase, body);
+  const select=$('schoolPick');
+  if (select) {
+    const preview=()=>{
+      const school=SCHOOLS[select.value];
+      const card=TACTICS[school.cards[g.schoolPicks.includes(select.value)?1:0]];
+      $('schoolPreview').textContent=card.effect+' 말을 고르면 '+(g.room?'길을 열어':'엄호해')+' 1장을 교체하고 다음 첫 손패에 받습니다.';
+    };
+    select.onchange=preview;
+    preview();
+  }
 }
 function selectChoice(b) {
   if (!game || !b || b.disabled)return;
   const k = activePanel(), token = Number(b.dataset.token);
   if (k !== 'hand' && k !== 'reward')return;
   let accepted = false;
-  if (k === 'reward' && b.hasAttribute('data-pick'))accepted = game.choose(b.dataset.pick, token);
+  if (k === 'reward' && b.hasAttribute('data-pick'))accepted = game.choose(b.dataset.pick, token, $('schoolPick')?.value || null);
   if (k === 'hand' && (b.hasAttribute('data-card') || b.hasAttribute('data-skip')))
   accepted = game.order(b.hasAttribute('data-skip')?null:Number(b.dataset.card), token);
   if (accepted) {
