@@ -68,13 +68,14 @@ dialog,.combat-head,.combat-foot,.system-rail,.xp-rail,#growth,#arrival{backgrou
 
 /* Silver scrollwork, cut-glass diamonds and letterpress dialogue. */
 :root{--ornament:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%23bfc8d2' stroke-width='1.8'%3E%3Cpath d='M2 56V4h53M7 43C8 23 28 25 26 12c-1-8-14-8-15 0-1 7 10 8 9 2M7 29C22 18 4 23 7 10M22 6c11 3 5 11 16 9l12-8M5 52c5-12 16-10 17-21-6 4-14 5-17 21Z'/%3E%3C/g%3E%3C/svg%3E")}
-body{background-color:#acb7c6;background-image:repeating-conic-gradient(from 30deg,#74829820 0 60deg,transparent 0 180deg);background-size:34px 54px}
+body{background-color:#acb7c6;background-image:conic-gradient(#e9edf2 25%,#9baabc 0 50%,#e9edf2 0 75%,#9baabc 0);background-size:64px 64px}
 .titlecopy,.combat-head,.system-rail,dialog .dialog-head,.turnline{background:linear-gradient(125deg,#242a36f2,#101722f5 65%,#273142f2);border:3px double #aeb7c4;color:#f5f6fa;border-radius:1px;box-shadow:inset 0 0 0 2px #080e19,0 2px 6px #13243c44}
 .titlecopy:before,.titlecopy:after,.turnline:after,.dialog-head:after{position:absolute;content:"";width:32px;height:32px;background:var(--ornament) center/contain;pointer-events:none}.titlecopy:before{left:0;top:0}.titlecopy:after,.turnline:after,.dialog-head:after{bottom:0;right:0;transform:rotate(180deg)}
 .titlecopy h1,.titlecopy h1 em,.titlecopy p,.combat-head .room-title h2,.combat-head strong,.combat-head small,.combat-head #silverProgress,.system-rail button,.system-rail .imprint,.dialog-head h2,.dialog-head .eyebrow{color:#eef2f8}
 .dialog-head{position:relative;padding:12px 20px;margin-bottom:12px}.turnline{position:relative;padding:8px 20px 12px;font-family:Georgia,serif}.turnline:before{content:'Sebastian';display:block;width:80%;border-bottom:1px solid #7c8796;font:600 13px Georgia,serif;letter-spacing:.07em;margin-bottom:5px;color:#d7dfe8}
 dialog{border:4px double #b9c4d0;border-radius:2px;background:linear-gradient(125deg,#f4f7fbf5,#d8e1ecf0)}.card,.primary,.minor{border-radius:2px}.lab{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lab label{display:grid;gap:7px;color:#1c324b;font-weight:600}.lab select{width:100%;min-height:44px}.history{padding-left:21px;font-size:13px;line-height:1.6}.history li{margin-bottom:6px}#arrival{white-space:normal;text-align:center;width:max-content;max-width:94%}
 @media(max-width:600px){.lab{grid-template-columns:1fr}.dialog-head{padding:8px 12px}.turnline{padding:5px 12px 9px}.titlecopy{background:linear-gradient(120deg,#232a37f0,#101825e8)}}
+#searchAction{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);max-width:92%;width:max-content;min-height:44px;z-index:2;background:#162d47f5;color:white;border:2px double #d3e1ec}
 </style></head><body>
 <svg aria-hidden="true" class="symbols"><defs>
 <symbol id="settings" viewBox="0 0 24 24"><path d="M3 7h5m4 0h9M3 17h11m4 0h3"/><circle cx="10" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></symbol>
@@ -88,7 +89,7 @@ dialog{border:4px double #b9c4d0;border-radius:2px;background:linear-gradient(12
 <div class="titlecopy"><h1>Black <span><em>to</em> Move</span></h1><p>팬텀하이브 저택</p><button class="primary embark" id="start" disabled>게임 시작 <svg><use href="#arrow"/></svg></button><button class="minor ledger-open" id="ledger">전술 수첩 · 자유 편성</button></div>
 </main><main id="game" hidden>
 <section class="combat-head"><div class="room-title"><small id="roomEn"></small><h2 id="roomName"></h2></div><div class="readout"><div class="armament"><small>은식기</small><strong id="silverLevel"></strong><span id="silverProgress"></span></div><div class="health"><small>호위</small><span id="hearts"></span></div><div class="time"><small id="clockName"></small><strong id="clock"></strong></div></div></section>
-<section class="field"><canvas id="arena" tabindex="0" aria-label="전투판. 방향키로 이동하거나 화면을 드래그하세요."></canvas><canvas id="radar" width="200" height="120" aria-label="저택 약도. 금색은 대열, 붉은색은 적, 초록색은 열린 출구"></canvas><button id="bellAction" class="minor" hidden>호출종 울리기 · 정예 처치 시 출구 개방</button><div id="stick" hidden><i></i></div><div id="growth" role="status"></div><div id="arrival" aria-live="polite"></div></section>
+<section class="field"><canvas id="arena" tabindex="0" aria-label="전투판. 방향키로 이동하거나 화면을 드래그하세요."></canvas><canvas id="radar" width="200" height="120" aria-label="저택 약도. 금색은 대열, 붉은색은 적, 초록색은 열린 출구"></canvas><button id="searchAction" class="minor" hidden></button><button id="bellAction" class="minor" hidden>호출종 울리기 · 정예 처치 시 출구 개방</button><div id="stick" hidden><i></i></div><div id="growth" role="status"></div><div id="arrival" aria-live="polite"></div></section>
 <div class="xp-rail"><progress id="xpMeter" aria-label="대열 경험치" max="3" value="0"></progress><button id="train" type="button" disabled></button></div><section class="combat-foot"><div class="formation-row"><small>대열</small><div id="formation"></div></div><div class="door-status"><i></i><span id="door"></span></div></section>
 </main>
 <div class="surround" aria-hidden="true"><b></b><i></i></div></div>
@@ -494,6 +495,7 @@ function meyrin(g, u, command, probe = false) {
       const dx = e.x - u.x, dy = e.y - u.y, along = dx * dir.x + dy * dir.y;
       if (along >= 0 && along <= 6 && Math.abs(dx * dir.y - dy * dir.x) <= width / 2 + 1e-8) {
         damage(g, e, 14 + 4*g.orderRank + (slowAt(g, e) > 0?5:0));
+        if(slowAt(g,e)>0)g.links.slowHits++;
         hits++;
       }
     }
@@ -523,7 +525,7 @@ function finny(g, u, command, probe = false) {
 function bard(g, u, command, probe = false) {
   if (probe)return true;
   for (const p of command?[trailAt(g, 0), trailAt(g, 1), trailAt(g, 2)]:comboActive(g,'bard')?[u,trailAt(g,1),trailAt(g,2)]:[u]) {
-    g.fires.push({...copyPoint(p), born:g.tick, end:g.tick + (u.level === 2?180:120)});
+    g.fires.push({...copyPoint(p), owner:"bard", born:g.tick, end:g.tick + (u.level === 2?180:120)});
   }
   return true;
 }
@@ -581,7 +583,13 @@ function playTrick(g,event,amount,origin) {
       if(c.trick==='frost')enemy.slows.push({rate:.5,end:g.tick+120});
       else {
         const dir=to(enemy,origin), step=Math.min(1,distance(enemy,origin));
+        const before=copyPoint(enemy);
         travel(g.room,enemy,dir.x*step,dir.y*step,enemy.radius);
+        if(distance(before,enemy)>.01){
+          if(!enemy.everPulled)g.links.pulled++;
+          enemy.everPulled=true;
+          enemy.pullUntil=g.tick+180;
+        }
       }
     }
   }
@@ -596,8 +604,8 @@ const COMBOS = {
 function comboActive(g,key) {
   return !!(g.roster[key] && g.training[COMBOS[key].perk]);
 }
-const ROOM_EXIT_TICKS = [25 * HZ, 60 * HZ, Infinity];
-const HAND_TICKS = [[10 * HZ], [12 * HZ, 30 * HZ, 48 * HZ]];
+const ROOM_EXIT_TICKS = [25 * HZ, 150 * HZ, Infinity];
+const HAND_TICKS = [[10 * HZ], [12 * HZ, 30 * HZ, 58 * HZ, 85 * HZ, 115 * HZ, 140 * HZ]];
 function wavePlan(room) {
   const events = [];
   function band(start, end, interval, count, side) {
@@ -614,7 +622,11 @@ function wavePlan(room) {
     band(0, 20, 1.5, 1, 'W');
     band(20, 45, 1, 1, 'alt');
     band(45, 60, 1.2, 2, 'E');
-    for (const t of [25, 40, 52])events.push({at:t * HZ, kind:'charger', side:'N', count:1});
+    band(60,90,1.4,2,'alt');
+    band(90,120,1,2,'W');
+    band(120,150,.9,2,'alt');
+    for(const t of [68,98,130])events.push({at:t*HZ,kind:'elite',side:'E',count:1});
+    for (const t of [25,40,52,76,83,104,112,132,143])events.push({at:t * HZ, kind:'charger', side:'N', count:1});
   }
   return events.sort((a, b) => a.at - b.at || Number(b.kind !== 'chaser') - Number(a.kind !== 'chaser'));
 }
@@ -629,6 +641,8 @@ class Game{
     this.redraws = 1;
     this.redrawLevel = -1;
     this.xp = 0;
+    this.links = {pulled:0,burned:0,slowHits:0};
+    this.revisions = [];
     this.wardKills = 0;
     this.strideDistance = 0;
     this.roster = {};
@@ -651,6 +665,11 @@ class Game{
     this.tick = 0;
     this.phase = 'fight';
     this.door = false;
+    this.reinforced = false;
+    this.searches = room === 1 ? [
+      {x:12,y:2,field:'trick',name:'북쪽 서가'},
+      {x:7,y:6,field:'cue',name:'중앙 서랍'}
+    ] : [];
     this.bell = room === 1 ? {x:10,y:2,state:'idle'} : null;
     this.ended = false;
     this.player = point(2, 6);
@@ -790,7 +809,20 @@ class Game{
       this.addCard(key);
     }
     this.log.picks.push({room:this.room, key, level:this.roster[key]});
-    this.enter(this.room + 1);
+    if(this.room===1){
+      this.reinforced=true;
+      const previousUnit=this.units.find(u=>u.key===key);
+      if(previousUnit)previousUnit.level=this.roster[key];
+      else this.units.push({key,level:1,...station(this,key),ready:this.tick});
+      // Reconcile the live piles by card ID without reshuffling the room.
+      const live=[...this.draw,...this.discard];
+      for(const card of this.deck){
+        const old=live.find(c=>c.id===card.id);
+        if(old)Object.assign(old,card);
+        else this.draw.push({...card});
+      }
+      this.phase='fight';
+    }else this.enter(this.room + 1);
     return true;
   }
   finish(outcome) {
@@ -865,8 +897,25 @@ class Game{
     }
     this.enemies = this.enemies.filter(e => e.hp > 0);
   }
+  discovery(site) {
+    if (!this.custom || this.phase !== 'fight' || !this.reinforced || this.door || !this.searches.includes(site))return null;
+    const round = this.tick >= 90*HZ ? 2 : 1;
+    if(this.searchRound === round)return null;
+    const pool=Object.keys(site.field==='cue'?CUES:TRICKS).filter(k=>k!==this.custom[site.field]);
+    const key=shuffle(pool,randomStream(this.seed,site.field+'-search-'+round))[0];
+    return {key,round};
+  }
+  revise(site) {
+    const offer=this.discovery(site);
+    if(!offer || distance(this.player,site)>1.1)return false;
+    this.revisions.push({field:site.field,from:this.custom[site.field],to:offer.key,count:this.custom.count});
+    this.custom[site.field]=offer.key;
+    this.custom.charge=0;
+    this.searchRound=offer.round;
+    return true;
+  }
   canRing() {
-    return this.phase === 'fight' && this.bell?.state === 'idle' && !this.door
+    return this.tick >= 105*HZ && this.phase === 'fight' && this.bell?.state === 'idle' && !this.door
       && this.tick < this.exitTick - 36 && distance(this.player,this.bell) < 1.4
       && this.enemies.length + this.warnings.length < 22;
   }
@@ -1040,6 +1089,9 @@ class Game{
     this.fires = this.fires.filter(f => f.end >= this.tick);
     for (const e of this.enemies) {
       if (e.hp > 0 && this.tick >= e.fireReady && this.fires.some(f => this.tick > f.born && (this.tick - f.born) % 30 === 0 && distance(e, f) <= .8 + .14*this.orderRank)) {
+        if(e.pullUntil>=this.tick && !e.burnCounted && this.fires.some(f=>f.owner==='bard' && this.tick>f.born && (this.tick-f.born)%30===0 && distance(e,f)<=.8+.14*this.orderRank)){
+          e.burnCounted=true;this.links.burned++;
+        }
         damage(this, e, 3 + this.orderRank);
         e.fireReady = this.tick + 30;
       }
@@ -1079,10 +1131,14 @@ class Game{
       effect(this, 'heal', p, p);
       return false;
     });
+    if(this.room===1 && !this.reinforced && this.tick>=22*HZ){
+      this.reward();
+      return;
+    }
     if (this.room !== 2 && this.tick >= this.exitTick) {
       this.door = true;
       if (distance(this.player, point(19, 6)) <= .55) {
-        this.reward();
+        if(this.room===1)this.enter(2);else this.reward();
         return;
       }
     }
@@ -1498,8 +1554,9 @@ function drawRoomMap(g) {
     m.fillRect(185,50,7,20);
   }
   for (const e of g.enemies)dotAt(e,e.kind==='boss'?6:3,e.kind==='boss'?'#ffb66b':'#ff8687');
+  for(const site of g.searches)if(g.discovery(site))dotAt(site,5,'#badbff');
   for (const drop of g.items)dotAt(drop,4,'#adf8ba');
-  if (g.bell?.state === 'idle' && !g.door) {
+  if (g.bell?.state === 'idle' && g.tick>=105*HZ && !g.door) {
     m.strokeStyle='#cce8ff';m.lineWidth=2;
     m.strokeRect(g.bell.x*10-5,g.bell.y*10-5,10,10);
   }
@@ -1527,7 +1584,14 @@ function paint(g) {
     ctx.font='bold '+Math.max(11,s*.22)+'px sans-serif';ctx.lineWidth=3;ctx.strokeStyle='#263246';
     ctx.strokeText(label,p.x,p.y-Math.max(15,s*.52));ctx.fillText(label,p.x,p.y-Math.max(15,s*.52));
   }
-  if(g.bell?.state === 'idle' && !g.door) {
+  for(const site of g.searches)if(g.discovery(site)){
+    const p=project(site);
+    ground(site,.58,'#b3deff',false,2);
+    ctx.save();ctx.textAlign='center';ctx.font='bold 12px sans-serif';ctx.lineWidth=3;
+    ctx.strokeStyle='#14253b';ctx.fillStyle='#eaf7ff';
+    ctx.strokeText(site.name,p.x,p.y-6);ctx.fillText(site.name,p.x,p.y-6);ctx.restore();
+  }
+  if(g.bell?.state === 'idle' && g.tick>=105*HZ && !g.door) {
     const bell = project(g.bell);
     ground(g.bell,.65,'#d0eaff',false,2);
     ctx.save();
@@ -2123,11 +2187,11 @@ function runRules(seed = '1889') {
           g.immune = 999999;
           g.step();
           if (g.phase === 'hand')g.order(null);
+          if(g.phase==='reward'){picks.push(g.candidates.slice());g.choose(g.candidates[0]);}
         }
         g.player = point(19, 6);
         g.step();
-        picks.push(g.candidates.slice());
-        g.choose(r === 0?'meyrin':g.candidates[0]);
+        if(r===0){picks.push(g.candidates.slice());g.choose('meyrin');}
       }
       const spawns = g.log.spawns.slice();
       const bossTurns = g.log.hands.filter(h => h.room === 2).map(h => h.tick);
@@ -2149,7 +2213,7 @@ function runRules(seed = '1889') {
     equal(a, b);
     equal(a.picks, off.picks);
     equal(a.spawns, off.spawns);
-    equal(a.hands.map(h => h.tick), [600, 720, 1800, 2880]);
+    equal(a.hands.map(h => h.tick), [600,720,1800,3480,5100,6900,8400]);
     equal(off.hands.length, 0);
   });
   test('확장 인물은 추첨에서 제외 · 표식 우선 · 소마와 아그니 추가 연타', () => {
@@ -2312,10 +2376,19 @@ try {
   if(Array.isArray(entries))journal=entries.filter(e=>e && Object.hasOwn(CUES,e.cue) && Object.hasOwn(TRICKS,e.trick)).slice(0,30);
   legacy=JSON.parse(localStorage.getItem(recordKey)) || {};
 } catch {}
+function linkSummary(entry){
+  if(!entry.links)return '';
+  const lines=['끌어온 적 '+Number(entry.links.pulled)+'명 중 3초 안에 바르도의 불길로 피해를 받은 적 '+Number(entry.links.burned)+'명','감속 중 메이린 관통탄 명중 '+Number(entry.links.slowHits)+'회'];
+  for(const change of entry.revisions || []){
+    const names=change.field==='cue'?CUES:TRICKS;
+    lines.push('전술 교체 · '+escapeText(names[change.from])+' → '+escapeText(names[change.to]));
+  }
+  return '<br>'+lines.join('<br>');
+}
 function comboBook() {
   const optionsFor = obj => Object.entries(obj).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('');
   const previous = Object.keys(COMBOS).filter(k=>legacy[k]).map(k=>COMBOS[k].name);
-  const history = journal.map(e=>'<li><b>'+CUES[e.cue]+' → '+TRICKS[e.trick]+'</b><br>'+escapeText(e.party)+' · '+(e.won?'승리':'패배')+' · 발동 '+Number(e.count)+'회</li>').join('');
+  const history = journal.map(e=>'<li><b>'+CUES[e.cue]+' → '+TRICKS[e.trick]+'</b><br>'+escapeText(e.party)+' · '+(e.won?'승리':'패배')+' · 발동 '+Number(e.count)+'회'+linkSummary(e)+'</li>').join('');
   drawer('book',header('FIELD NOTES','전술 수첩')+'<div class="lab"><label>언제 발동할까<select id="cue">'+optionsFor(CUES)+'</select></label><label>무엇을 할까<select id="trick">'+optionsFor(TRICKS)+'</select></label></div><div class="dlgfoot"><button class="primary" data-action="launch">이 전술로 출전</button></div><h3>플레이 기록</h3>'+(history?'<ol class="history">'+history+'</ol>':'<p class="intro">한 판을 마치면 사용한 전술과 대열이 여기에 남습니다.</p>')+(previous.length?'<p class="copy">이전 도감 승리 · '+previous.join(' · ')+'</p>':''),true);
   if(planned){$('cue').value=planned.cue;$('trick').value=planned.trick;}
 }
@@ -2356,7 +2429,15 @@ function sync() {
   if (!game)return;
   const g = game, room = ROOMS[g.room], boss = g.enemies.find(e => e.kind === 'boss'), time = g.room === 2?Math.max(0, boss?.hp || 0) + ' / 160':fmt(g.tick);
   const s=g.silver, next=SILVER_TIERS[s.tier+1];
-  const stamp = [g.room, time, g.hp, g.door, s.count,g.orderRank].join('|');
+  const stamp = [g.room, time, g.hp, g.door, s.count,g.orderRank,g.reinforced].join('|');
+  const nearby=g.searches.find(site=>distance(site,g.player)<=1.1 && g.discovery(site));
+  const search=$('searchAction');
+  search.hidden=!nearby;
+  if(nearby){
+    const pool=nearby.field==='cue'?CUES:TRICKS;
+    const text=nearby.name+' · '+pool[g.custom[nearby.field]]+' → '+pool[g.discovery(nearby).key]+' 교체';
+    if(search.textContent!==text)search.textContent=text;
+  }
   $('bellAction').hidden = !g.canRing();
   const trainingButton = $('train');
   const canTrain = g.trainingLevel < 8 && g.xp >= g.xpNeeded;
@@ -2378,9 +2459,9 @@ function sync() {
     $('clockName').textContent = g.room === 2?'보스 체력':'경과 시간';
     $('clock').textContent = time;
     $('door').textContent = g.room === 2?'보스 격파':g.door?'동쪽 출구 개방':'출구 개방까지 ' + Math.ceil((g.exitTick - g.tick) / 60) + '초';
-    if ($('formation').dataset.order !== [g.orderRank,g.trainingLevel,g.room].join('-')) {
+    if ($('formation').dataset.order !== [g.orderRank,g.trainingLevel,g.room,g.reinforced].join('-')) {
       $('formation').innerHTML = formation();
-      $('formation').dataset.order = [g.orderRank,g.trainingLevel,g.room].join('-');
+      $('formation').dataset.order = [g.orderRank,g.trainingLevel,g.room,g.reinforced].join('-');
     }
     hudStamp = stamp;
   }
@@ -2388,7 +2469,7 @@ function sync() {
     $('formation').innerHTML = formation();
     lastRoom = g.room;
     lastArrival = 120;
-    $('arrival').textContent = g.room === 0 && g.custom?CUES[g.custom.cue]+' → '+TRICKS[g.custom.trick]:g.room === 0?'':g.room === 1?g.units[0] && PIECES[g.units[0].key].name + ' 합류 · 북쪽 호출종으로 출구 조기 개방':'연회장 진입 · 돌진 예고에 주의';
+    $('arrival').textContent = g.room === 0 && g.custom?CUES[g.custom.cue]+' → '+TRICKS[g.custom.trick]:g.room === 0?'':g.room === 1?g.units[0] && PIECES[g.units[0].key].name + ' 합류 · 회랑 22초에 증원':'연회장 진입 · 돌진 예고에 주의';
   }
   const notice=g.lastSilverNotice;
   const activeStances=Object.entries(g.stances).filter(([,state])=>state.until>g.tick)
@@ -2408,7 +2489,7 @@ function showTurn() {
   turnShows++;
   let body = header(isReward?'NEXT PIECE':'COMMAND HAND', isReward?'다음 말을 두세요':'시엘의 명령', 'pause');
   const next = ROOMS[g.room + 1];
-  body += isReward?'<p class="intro">다음 구역 · <b>' + next.name + '</b><br>' + next.note + '</p>':'<p class="intro">' + ROOMS[g.room].name + ' · ' + fmt(g.tick) + '　전투 정지 중</p>';
+  body += isReward && g.room===1?'<p class="intro">회랑 증원 · 선택한 말이 즉시 대열에 합류합니다. 북쪽 서가에서는 전술 효과를, 중앙 서랍에서는 발동 조건을 교체할 수 있습니다.</p>':isReward?'<p class="intro">다음 구역 · <b>' + next.name + '</b><br>' + next.note + '</p>':'<p class="intro">' + ROOMS[g.room].name + ' · ' + fmt(g.tick) + '　전투 정지 중</p>';
   body += '<p class="turnline new" lang="en">' + TURN_LINE + '</p>';
   if (isReward) {
     if (g.commands) {
@@ -2448,12 +2529,17 @@ function showTurn() {
     const preview=()=>{
       const school=SCHOOLS[select.value];
       const card=TACTICS[school.cards[g.schoolPicks.includes(select.value)?1:0]];
-      $('schoolPreview').textContent=card.effect+' 말을 고르면 '+(g.room?'길을 열어':'엄호해')+' 1장을 교체하고 다음 첫 손패에 받습니다.';
+      $('schoolPreview').textContent=card.effect+' 말을 고르면 '+(g.room?'길을 열어':'엄호해')+' 1장을 교체합니다.';
     };
     select.onchange=preview;
     preview();
   }
 }
+$('searchAction').onclick=()=>{
+  if(!game || modal.open)return;
+  const site=game.searches.find(s=>distance(s,game.player)<=1.1 && game.discovery(s));
+  if(site && game.revise(site))sync();
+};
 $('bellAction').onclick = () => {
   if (game && !modal.open && game.ringBell())sync();
 };
@@ -2496,7 +2582,7 @@ function pauseGame() {
   drawer('pause', header('INTERMISSION', '일시정지', '') + '<p class="intro">' + ROOMS[game.room].name + ' · ' + fmt(game.tick) + '</p><p class="copy">'+(game.custom?CUES[game.custom.cue]+' → '+TRICKS[game.custom.trick]:'')+'</p><div class="dlgfoot"><button class="primary" data-action="close">계속하기</button><button class="minor" data-action="settings">설정</button><button class="minor" data-action="leave">타이틀로</button></div>', true);
 }
 function showHelp() {
-  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>대열 강화</dt><dd>쓰러진 적이 남긴 보라색 결정을 주우세요. 경험치가 차면 전투판 하단의 대열 강화 선택을 눌러 이번 판에 쓸 능력을 고릅니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>현관홀은 25초, 서재 회랑은 60초에 동쪽 문이 열립니다. 회랑 북쪽의 호출종에 다가가 울리면 정예가 등장합니다. 그 정예를 처치하면 문이 즉시 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 현관홀 10초와 서재 회랑 12·30·48초에 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
+  drawer('help', header('HOW TO PLAY', '조작 안내') + '<dl class="scrolltext"><dt>이동과 공격</dt><dd>WASD·방향키로 이동하세요. 터치 화면에서는 전투판을 누른 채 원하는 방향으로 드래그하세요. 세바스찬은 5m 안의 가장 가까운 적에게 자동으로 은식기를 던집니다. 금색 발밑 원이 피격 범위입니다.</dd><dt>대열 강화</dt><dd>쓰러진 적이 남긴 보라색 결정을 주우세요. 경험치가 차면 전투판 하단의 대열 강화 선택을 눌러 이번 판에 쓸 능력을 고릅니다.</dd><dt>사용인 오더 카드</dt><dd>사용인이 합류하면 금테 왕관 카드가 떨어집니다. 주울 때마다 모든 사용인의 기본 공격이 빨라지고 각자의 기술이 강화됩니다. 최대 6단계이며 다음 방까지 이어집니다.</dd><dt>세바스찬의 은식기</dt><dd>청록색 포크 아이콘에 다가가 파편을 모으세요. 총 ' + SILVER_TIERS.slice(1).map(t=>t.need).join('·') + '개에서 쌍투, 부채 투척, 회전 나이프, 이중 나선, 은빛 소나기, 은식기 폭풍이 차례로 열립니다. 파편은 바닥과 쓰러진 적에게서 얻습니다. 모은 파편은 다음 방에 이어지며, 최고 단계에서는 여섯 개마다 추가 일제 사격이 나갑니다.</dd><dt>현관홀과 서재 회랑</dt><dd>현관홀은 25초, 서재 회랑은 150초에 동쪽 문이 열립니다. 회랑 22초에 두 번째 말을 고릅니다. 이후 북쪽 서가와 중앙 서랍 중 한 곳에서 전술을 교체할 수 있고, 90초에 새 후보가 나옵니다. 105초부터 회랑 북쪽의 호출종에 다가가 울리면 정예가 등장합니다. 그 정예를 처치하면 문이 즉시 열립니다. 남은 적을 피해 문 안쪽의 원에 들어가세요. 정예가 남긴 구급상자는 호위를 한 칸 회복합니다.</dd><dt>시엘의 차례</dt><dd>카드를 누르거나 숫자 1·2·3으로 고르세요. 현관홀 10초와 서재 회랑 12·30·58·85·115·140초에 명령 두 장을 받고 하나를 쓰거나 넘깁니다. 출구에서는 다음 방에 가져갈 말을 고릅니다.</dd><dt>연회장</dt><dd>바닥에 붉은 선이 나타나면 옆으로 비키세요. 돌진 후 보스가 멈춘 동안 공격하면 피해가 1.5배가 됩니다. 호위 여섯 칸을 모두 잃으면 게임이 끝납니다.</dd><dt>잠시 멈추기</dt><dd>Esc로 일시정지하거나 이전 창으로 돌아갑니다. 전투판을 드래그하던 손은 뗀 뒤 새로 눌러 카드를 선택하세요.</dd></dl>', true);
 }
 function settings() {
   const html = header('OPTIONS', '게임 설정') + '<label class="settings-line">대국 시드 <input id="seed" type="text" maxlength="70" placeholder="비우면 매 판 무작위" value="' + escapeText(options.seed) + '" autocomplete="off"></label><label class="settings-line">시엘의 명령 덱 <input id="useDeck" type="checkbox" ' + (options.commands?'checked':'') + '></label><p class="intro">시드와 명령 덱 설정은 다음 판부터 적용됩니다.</p><label class="settings-line">개발용 시점 비교 <select id="projection"><option value="top">탑뷰</option><option value="iso" ' + (options.iso?'selected':'') + '>아이소메트릭</option></select></label><div class="dlgfoot"><button class="minor" data-action="tests">규칙 테스트 실행</button><button class="primary" data-action="save">설정 적용</button></div>';
@@ -2520,7 +2606,7 @@ function showResult() {
   const g = game, won = g.phase === 'win';
   if(g.custom && !g.recorded){
     g.recorded=true;
-    journal.unshift({...g.custom,party:Object.keys(g.roster).map(k=>PIECES[k].name).join(' · ') || '시엘 · 세바스찬',won});
+    journal.unshift({...g.custom,links:{...g.links},revisions:g.revisions.slice(),party:Object.keys(g.roster).map(k=>PIECES[k].name).join(' · ') || '시엘 · 세바스찬',won});
     journal=journal.slice(0,30);
     try {localStorage.setItem('black-to-move.journal-v2',JSON.stringify(journal));} catch {}
   }
@@ -2528,7 +2614,7 @@ function showResult() {
   html += '<p class="copy">시드 '+escapeText(g.seed)+' · '+(g.schoolPicks.map(k=>SCHOOLS[k].name).join(' → ')||'계통 미선택')+'</p><p class="copy">세바스찬의 은식기　Lv.'+(g.silver.tier+1)+' · '+SILVER_TIERS[g.silver.tier].name+' · 파편 '+g.silver.count+'개</p>';
   html += '<p class="copy">둔 말　' + (g.log.picks.map(p => PIECES[p.key].name + (p.level === 2?' Ⅱ':'')).join(' → ') || '없음') + '<br>사용한 명령　' + (g.log.commands.map(c => cardName(c)).join(' · ') || '없음') + '</p>';
   if(g.trainingLevel)html += '<p class="copy">대열 강화　'+Object.entries(g.training).map(([key,rank])=>TRAINING[key].name+' '+(rank===2?'Ⅱ':'Ⅰ')).join(' · ')+'</p>';
-  if(g.custom)html += '<p class="copy">'+CUES[g.custom.cue]+' → '+TRICKS[g.custom.trick]+' · 발동 '+g.custom.count+'회</p>';
+  if(g.custom)html += '<p class="copy">'+CUES[g.custom.cue]+' → '+TRICKS[g.custom.trick]+' · 발동 '+g.custom.count+'회'+linkSummary(g)+'</p>';
   html += g.log.rooms.map(s => '<div class="logline"><span>' + ROOMS[s.room].name + '</span><span>' + fmt(s.elapsed) + ' · 피격 ' + s.hits + '회</span></div>').join('');
   html += '<div class="dlgfoot"><button class="primary" data-action="retry">재도전</button><button class="minor" data-action="book">다른 조합 도전</button><button class="minor" data-action="home">타이틀로</button></div>';
   drawer('result', html);
