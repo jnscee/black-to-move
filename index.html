@@ -1241,7 +1241,7 @@ function drawMovingEffect(g, f) {
       ctx.fillText('관통 ×' + f.hits, p.x, p.y - s * 1.1);
     }
   }
-  if(f.type==='fuse'){ground(f.a,f.range,'#edc875',false,2);return;}
+  if (f.type === 'fuse')ground(f.a, f.range, '#edc875', false, 2);
   if (f.type === 'silver') {
     const travel = Math.min(1, life * 2.8), x = p.x + (q.x - p.x) * travel, y = p.y + (q.y - p.y) * travel - s * (.97-.36*travel);
     const v = unit(q.x - p.x, q.y - p.y);
